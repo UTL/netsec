@@ -11,9 +11,15 @@ unsigned char * PTK (unsigned char *key, unsigned char * ANonce, unsigned char *
 
 void PRF(unsigned char *key, int key_len,unsigned char *prefix, int prefix_len,unsigned char *data, int data_len,unsigned char *output, unsigned int len);
 
+
 char * extochar(char * in, int inLen);
 
+
+
+int compare_test_vector(unsigned char * test, unsigned char * toTest, int length);
+
 int chartoint(char car);
+
 
 //da esadecimale a char
 char * extochar(char * in, int inLen){
@@ -136,6 +142,7 @@ void PRF(
 		for (k = 0;  k < 20;  k++) printf("%02x ", temp[k]);
 			  printf("\n");
 		int j;
+
 		for (j=0; j<20;j++){
 			output[currentindex+j]=temp[j];
 
@@ -146,9 +153,41 @@ void PRF(
 	}
 }
 
+void check_prf(){
 
+	unsigned char * key =extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",40);
+	int key_len = 20; // in byte
+	unsigned char * prefix ="prefix";
+	int prefix_len= 6; // in byte
+	unsigned char * data= "Hi There";
+	int data_len = 8;
+	unsigned int len = 80;
+	unsigned char output[len];
+
+	unsigned char * test = extochar("bcd4c650b30b9684951829e0d75f9d54b862175ed9f00606e17d8da35402ffee75df78c3d31e0f889f012120c0862beb67753e7439ae242edb8373698356cf5a",80);
+	int k ;
+
+
+	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
+
+	if(compare_test_vector(test, output, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("PRF TEST VECTOR: OK");
+	else 
+		printf("PRF TEST VECTOR: ERROR");
+	}
+
+	int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
+		int i;
+		for(i=0; i<length; i++){
+			if(test[i] != toTest[i])
+				return 0;
+		}
+		return 1;
+	}
 
 void main(){
+	check_prf();
+/*
 	printf("debug-10\n");
 	unsigned char * key =extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",40);
 	int key_len = 20; // in byte
@@ -158,6 +197,8 @@ void main(){
 	int data_len = 8;
 	unsigned int len = 80;
 	unsigned char * output; //[len];
+
+	
 
 	unsigned char tk[16];
 
@@ -197,6 +238,8 @@ void main(){
 	
 	 // printf("\n");
 	 // printf("%d\nUNO\n",(int)'1'-(int)'0');
+
+*/
 
 	/*
 	 * da fare:
