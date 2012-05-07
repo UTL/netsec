@@ -150,6 +150,7 @@ void PRF(
 	}
 }
 
+//funzione per testare la prf
 void check_prf(){
 
 	unsigned char * key =extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",40);
@@ -162,7 +163,6 @@ void check_prf(){
 	unsigned char output[len];
 
 	unsigned char * test = extochar("bcd4c650b30b9684951829e0d75f9d54b862175ed9f00606e17d8da35402ffee75df78c3d31e0f889f012120c0862beb67753e7439ae242edb8373698356cf5a",80);
-	int k ;
 
 
 	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
@@ -171,6 +171,23 @@ void check_prf(){
 		printf("PRF TEST VECTOR: OK");
 	else 
 		printf("PRF TEST VECTOR: ERROR");
+	
+	key =extochar("Jefe",8);
+	key_len = 4; // in byte
+	prefix ="prefix";
+	prefix_len= 6; // in byte
+	data= "what do ya want for nothing?";
+	data_len = 28;
+	
+	test = extochar("51f4de5b33f249adf81aeb713a3c20f4fe631446fabdfa58244759ae58ef9009a99abf4eac2ca5fa87e692c440eb40023e7babb206d61de7b92f41529092b8fc",80);
+	
+	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
+
+	if(compare_test_vector(test, output, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("PRF TEST VECTOR: OK");
+	else 
+		printf("PRF TEST VECTOR: ERROR");
+	
 	}
 
 	int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
