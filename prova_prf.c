@@ -188,29 +188,30 @@ void check_prf(){
 	
 	unsigned char * test3= extochar("51f4de5b33f249adf81aeb713a3c20f4fe631446fabdfa58244759ae58ef9009a99abf4eac2ca5fa87e692c440eb40023e7babb206d61de7b92f41529092b8fc", 80);
 		
-	
-	PRF(key2, key_len2,prefix2, prefix_len2,data2,  data_len2, output2, len2);
-
-	if(compare_test_vector(test2, output2, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR: OK\n");
-	else 
-		printf("PRF TEST VECTOR: ERROR\n");
 
 
 	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
 
 	if(compare_test_vector(test, output, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR: OK\n");
+		printf("PRF TEST VECTOR 1: OK\n");
 	else 
-		printf("PRF TEST VECTOR: ERROR\n");
+		printf("PRF TEST VECTOR 1: ERROR\n");
+
+		
+	PRF(key2, key_len2,prefix2, prefix_len2,data2,  data_len2, output2, len2);
+
+	if(compare_test_vector(test2, output2, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("PRF TEST VECTOR 2: OK\n");
+	else 
+		printf("PRF TEST VECTOR 2: ERROR\n");
 	
 	
 	PRF(key3, key_len3,prefix3, prefix_len3,data3,  data_len3,output3, len3);
 
 	if(compare_test_vector(test3, output3, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR: OK\n");
+		printf("PRF TEST VECTOR 3: OK\n");
 	else 
-		printf("PRF TEST VECTOR: ERROR\n");
+		printf("PRF TEST VECTOR 3: ERROR\n");
 	
 	
 	
