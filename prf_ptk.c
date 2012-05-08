@@ -310,6 +310,7 @@ void pbkdf2(char *pass, unsigned char *salt,unsigned char *out){
 	PKCS5_PBKDF2_HMAC_SHA1(pass, strlen(pass), salt, sizeof(salt), ITERATION, KEK_KEY_LEN, out);
 	}
 	
+	//testa tutto fino alla tk
 void check_picci_stream(){
 	int KEK_KEY_LEN = 32; //32
 	int ITERATION = 4096; //4096
@@ -344,14 +345,13 @@ void main(){
 	check_pbkdf2();
 	check_prf();
 	check_ptk();
+	
+	//testa tutto fino alla tk
 	check_picci_stream();
 	
 
 	/*
 	 * da fare:
-	 * 1) 	estrarre TK da PTK, vedi http://www.velocityreviews.com/forums/t316034-substring.html, guardare lo standard ed estrarla dal test vector
-	 *	fatto, verificare se ci va uno 0 in fondo o meno
-	 * espandere la (chiave dell'utente) PSK, con la funzione già esistente (funzione file Frasten)
 	 * cercare la funzione CCM in OPENSSL
 	 * estrarre a mano i campi dei pacchetti da wireshark
 	 * provare la funzione CCM
