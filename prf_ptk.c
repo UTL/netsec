@@ -321,11 +321,53 @@ check_pbkdf2(){
 		printf("PKCS5 TEST VECTOR PICCI: ERROR\n");
 	//printhex(out2, KEK_KEY_LEN);
 	}
+	
+	//wrapper da testare
+void pbkdf2(char *pass, unsigned char *salt,unsigned char *out){
+	int KEK_KEY_LEN = 32; //32
+	int ITERATION = 4096; //4096
+	
+	PKCS5_PBKDF2_HMAC_SHA1(pass, strlen(pass), salt, sizeof(salt), ITERATION, KEK_KEY_LEN, out);
+	}
+	
+void check_picci_stream(){
+	int KEK_KEY_LEN = 32; //32
+	int ITERATION = 4096; //4096
+	int TK_LEN = 16;
+	unsigned char *pmk;
+	const char pwd[] = "angelatramontano";
+	unsigned char ssid[] = {'S','i','t','e','c','o','m'};
+	
+	pmk = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
+	PKCS5_PBKDF2_HMAC_SHA1(pwd, strlen(pwd), ssid, sizeof(ssid), ITERATION, KEK_KEY_LEN, pmk);
+	unsigned char * AP= extochar("000cf635dfab", 12);
+	unsigned char * STA = extochar("74f06d40a6a3",12);
+	char str_anonce[] = "d5c0958cc32b7b3ae762c43b41436059e54cb48f224d35718613838d9640644d";
+	unsigned char * Anonce = extochar(str_anonce, strlen(str_anonce));
+	char str_snonce[] = "fbf9fbe50feae721f3e9991b810bab7e601e53de7455dc6ca29802f0ea34cb24";
+	unsigned char * Snonce = extochar(str_snonce, strlen(str_snonce));
+	
+	unsigned char *bigK = PTK(pmk, Anonce, Snonce, AP, STA);
+	
+	unsigned char * tk = tk_extract(bigK);
+	
+	//printhex(tk, TK_LEN);
+	
+	char str_test[] = "c7134fd10709f028d63c2e05cbb4c16c";
+	unsigned char * test_tk = extochar(str_test, strlen(str_test));
+	
+	if(compare_test_vector(test_tk, tk, TK_LEN)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("PICCI STREAM TEST VECTOR: OK\n");
+	else 
+		printf("PICCI STREAM TEST VECTOR: ERROR\n");
+	
+	} 
 
 void main(){
+	check_pbkdf2();
 	check_prf();
 	check_ptk();
-	check_pbkdf2();
+	check_picci_stream();
 	
 
 	/*
