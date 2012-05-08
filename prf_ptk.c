@@ -19,6 +19,14 @@ int chartoint(char car);
 
 void check_prf();
 
+void print_check(char * tipo_test, int testOk){
+	printf("TEST VECTOR %s:",tipo_test);
+	if(testOk)
+		printf(" OK\n");
+	else
+		printf(" FALLITO\n");
+	}
+
 void printhex(unsigned char * toPrint, int length){
 	int k;
 	for (k = 0;  k < length;  k++) 
@@ -210,38 +218,18 @@ void check_prf(){
 
 
 	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
-
-	if(compare_test_vector(test, output, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR 1: OK\n");
-	else 
-		printf("PRF TEST VECTOR 1: ERROR\n");
+	print_check("PRF 1", compare_test_vector(test, output, 40));
 
 		
 	PRF(key2, key_len2,prefix2, prefix_len2,data2,  data_len2, output2, len2);
-
-	if(compare_test_vector(test2, output2, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR 2: OK\n");
-	else 
-		printf("PRF TEST VECTOR 2: ERROR\n");
+	print_check("PRF 2", compare_test_vector(test2, output2, 40));
 	
 	
 	PRF(key3, key_len3,prefix3, prefix_len3,data3,  data_len3,output3, len3);
-
-	if(compare_test_vector(test3, output3, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR 3: OK\n");
-	else 
-		printf("PRF TEST VECTOR 3: ERROR\n");
-	
+	print_check("PRF 3", compare_test_vector(test3, output3, 40));
 	
 	PRF(key4, key_len4,prefix4, prefix_len4,data4,  data_len4,output4, len4);
-
-	if(compare_test_vector(test4, output4, 40)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PRF TEST VECTOR 3: OK\n");
-	else 
-		printf("PRF TEST VECTOR 3: ERROR\n");
-	
-	
-	
+	print_check("PRF 4", compare_test_vector(test4, output4, 40));
 	}
 
 int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
@@ -279,10 +267,7 @@ void check_ptk(){
 	ptk = PTK(PMK, ANONCE, SNONCE, AA, SPA);
 	tk = tk_extract(ptk);
 	
-	if(compare_test_vector(test, tk, 16)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("TK TEST VECTOR 1: OK\n");
-	else 
-		printf("TK TEST VECTOR 1: ERROR\n");
+	print_check("TK 1", compare_test_vector(test, tk, 16));
 	
 	}
 	
@@ -301,10 +286,7 @@ check_pbkdf2(){
 	
 	unsigned char * test = extochar("0c60c80f961f0e71f3a9b524af6012062fe037a6",40);
 	
-	if(compare_test_vector(test, out, KEK_KEY_LEN)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PKCS5 TEST VECTOR 1: OK\n");
-	else 
-		printf("PKCS5 TEST VECTOR 1: ERROR\n");
+	print_check("PKCS5 1", compare_test_vector(test, out, KEK_KEY_LEN));
 	
 	unsigned char *out2;
 	KEK_KEY_LEN = 32; //32
@@ -315,10 +297,8 @@ check_pbkdf2(){
 	out = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
 	PKCS5_PBKDF2_HMAC_SHA1(pwd2, strlen(pwd2), salt_value2, sizeof(salt_value2), ITERATION, KEK_KEY_LEN, out2);
 	unsigned char * test2= extochar("00d13bfb75506b72134478095b567600f5f3e68f62ec842878f0ce5e1d360bb9",64);
-	if(compare_test_vector(test2, out2, KEK_KEY_LEN))
-		printf("PKCS5 TEST VECTOR PICCI: OK\n");
-	else 
-		printf("PKCS5 TEST VECTOR PICCI: ERROR\n");
+	
+	print_check("PKCS5 PICCI", compare_test_vector(test2, out2, KEK_KEY_LEN));
 	//printhex(out2, KEK_KEY_LEN);
 	}
 	
@@ -356,10 +336,7 @@ void check_picci_stream(){
 	char str_test[] = "c7134fd10709f028d63c2e05cbb4c16c";
 	unsigned char * test_tk = extochar(str_test, strlen(str_test));
 	
-	if(compare_test_vector(test_tk, tk, TK_LEN)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
-		printf("PICCI STREAM TEST VECTOR: OK\n");
-	else 
-		printf("PICCI STREAM TEST VECTOR: ERROR\n");
+	print_check("PICCI STREAM", compare_test_vector(test_tk, tk, TK_LEN));
 	
 	} 
 
