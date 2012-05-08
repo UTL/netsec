@@ -19,6 +19,14 @@ int chartoint(char car);
 
 void check_prf();
 
+void printhex(unsigned char * toPrint, int length){
+	int k;
+	for (k = 0;  k < length;  k++) 
+		printf("%02x ", toPrint[k]);
+	
+	printf("\n");
+	}
+
 //da esadecimale a char
 char * extochar(char * in, int inLen){
 	int i,k;
@@ -277,11 +285,48 @@ void check_ptk(){
 		printf("TK TEST VECTOR 1: ERROR\n");
 	
 	}
+	
+check_pbkdf2(){
+	int KEK_KEY_LEN = 20; //32
+	int ITERATION = 1; //4096
+	
+	size_t i;
+	unsigned char *out;
+	const char pwd[] = "password";
+	unsigned char salt_value[] = {'s','a','l','t'};
+
+	out = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
+	
+	PKCS5_PBKDF2_HMAC_SHA1(pwd, strlen(pwd), salt_value, sizeof(salt_value), ITERATION, KEK_KEY_LEN, out);
+	
+	unsigned char * test = extochar("0c60c80f961f0e71f3a9b524af6012062fe037a6",40);
+	
+	if(compare_test_vector(test, out, KEK_KEY_LEN)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("PKCS5 TEST VECTOR 1: OK\n");
+	else 
+		printf("PKCS5 TEST VECTOR 1: ERROR\n");
+	
+	unsigned char *out2;
+	KEK_KEY_LEN = 32; //32
+	ITERATION = 4096;
+	out2 = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
+	const char pwd2[] = "angelatramontano";
+	unsigned char salt_value2[] = {'S','i','t','e','c','o','m'};
+	out = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
+	PKCS5_PBKDF2_HMAC_SHA1(pwd2, strlen(pwd2), salt_value2, sizeof(salt_value2), ITERATION, KEK_KEY_LEN, out2);
+	unsigned char * test2= extochar("00d13bfb75506b72134478095b567600f5f3e68f62ec842878f0ce5e1d360bb9",64);
+	if(compare_test_vector(test2, out2, KEK_KEY_LEN))
+		printf("PKCS5 TEST VECTOR PICCI: OK\n");
+	else 
+		printf("PKCS5 TEST VECTOR PICCI: ERROR\n");
+	//printhex(out2, KEK_KEY_LEN);
+	}
 
 void main(){
 	check_prf();
 	check_ptk();
-
+	check_pbkdf2();
+	
 
 	/*
 	 * da fare:
