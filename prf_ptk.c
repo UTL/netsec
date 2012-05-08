@@ -249,6 +249,8 @@ int compare_test_vector(unsigned char * test, unsigned char * toTest, int length
 unsigned char * tk_extract(unsigned char *ptk){
 	unsigned char *tk = (unsigned char*)malloc(sizeof(unsigned char)*16);
 	
+	//TK: sono i bit di PTK da 256 a 383 (PTK 256 128)
+	//memcpy(&tk, &output, 1);
 	int k;
 	for (k = 32;  k < 48;  k++) 
 		tk[k-32] = ptk[k];
@@ -279,57 +281,6 @@ void check_ptk(){
 void main(){
 	check_prf();
 	check_ptk();
-/*
-	printf("debug-10\n");
-	unsigned char * key =extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",40);
-	int key_len = 20; // in byte
-	unsigned char * prefix ="prefix";
-	int prefix_len= 6; // in byte
-	unsigned char * data= "Hi There";
-	int data_len = 8;
-	unsigned int len = 80;
-	unsigned char * output; //[len];
-
-	unsigned char tk[16];
-
-	//Test vector OK per PTK
-	unsigned char * PMK = extochar("0dc0d6eb90555ed6419756b9a15ec3e3209b63df707dd508d14581f8982721af", 64);
-	unsigned char * AA = extochar("a0a1a1a3a4a5",12);
-	unsigned char * SPA = extochar("b0b1b2b3b4b5",12);
-	unsigned char * SNONCE = extochar("c0c1c2c3c4c5c6c7c8c9d0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5",64);
-	unsigned char * ANONCE = extochar("e0e1e2e3e4e5e6e7e8e9f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405",64);
-
-	int i =0;
-	printf("debug0\n");
-
-	output = PTK(PMK, ANONCE, SNONCE, AA, SPA);
-
-	for (i = 0;  i < len;  i++) {
-		if((i%16)==0) printf("\n");
-		printf("%02x ", output[i]);
-	}
-	printf("\n prova tk \n");
-	//TK: sono i bit di PTK da 256 a 383 (PTK 256 128)
-	
-		
-
-	//memcpy(&tk, &output, 1);
-	//tk[10]=0;
-	int ix = 0;
-	for(ix=0; ix < 16; ix++)
-       	 	tk[ix] = output[32+ix];
-	tk[16]=0; // non sono sicuro che questo ci vada!
-
-	for (i = 0;  i < 16;  i++) {
-		if((i%16)==0) printf("\n");
-		printf("%02x ", tk[i]);
-	}
-	printf("\n prova tk \n");
-	
-	 // printf("\n");
-	 // printf("%d\nUNO\n",(int)'1'-(int)'0');
-
-*/
 
 
 	/*

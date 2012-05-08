@@ -6,7 +6,7 @@ INCDIR=-I/usr/include
 HMAC=prova_hmac.c
 K_EXPANSION=prova_key_expansion.c
 HMAC2=prova_hmac_bis.c
-PRF=prova_prf.c
+PRF=prf_ptk.c
 SNIFFER=sniffer.c
 OUT_SNIFFER=sniffer
 
