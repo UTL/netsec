@@ -170,8 +170,8 @@ void check_prf(){
 	int key_len2 = 20; // in byte
 	unsigned char * prefix2 ="prefix";
 	int prefix_len2= 6; // in byte
-	unsigned char * data2= extochar("dddddddddddddddddddddddddddddddddddddddddddddddddd",50);
-	int data_len2 = 25;
+	unsigned char * data2= extochar("dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",100);
+	int data_len2 = 50;
 	unsigned int len2 = 80;
 	unsigned char output2[len2];
 	
@@ -188,7 +188,10 @@ void check_prf(){
 	unsigned char output3[len3];
 	
 	unsigned char * test3= extochar("51f4de5b33f249adf81aeb713a3c20f4fe631446fabdfa58244759ae58ef9009a99abf4eac2ca5fa87e692c440eb40023e7babb206d61de7b92f41529092b8fc", 80);
-		
+	
+	/*unsigned char * key4 = extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+prefix = "prefix-4"
+data = "Hi There Again"*/
 
 
 	PRF(key, key_len,prefix, prefix_len,data,  data_len,output, len);
