@@ -17,6 +17,7 @@ int compare_test_vector(unsigned char * test, unsigned char * toTest, int length
 
 int chartoint(char car);
 
+void check_prf();
 
 //da esadecimale a char
 char * extochar(char * in, int inLen){
@@ -136,8 +137,8 @@ void PRF(
 	for (i = 0; i < (len+19)/20; i++) {
 		temp = HMAC(EVP_sha1(), key, key_len, input, total_len, NULL, NULL);
 
-		for (k = 0;  k < 20;  k++) printf("%02x ", temp[k]);
-			  printf("\n");
+		//for (k = 0;  k < 20;  k++) printf("%02x ", temp[k]);
+		//	  printf("\n");
 		int j;
 
 		for (j=0; j<20;j++){
@@ -169,8 +170,8 @@ void check_prf(){
 	int key_len2 = 20; // in byte
 	unsigned char * prefix2 ="prefix";
 	int prefix_len2= 6; // in byte
-	unsigned char * data2= "dddddddddddddddddddddddddddddddddddddddddddddddddd";
-	int data_len2 = 50;
+	unsigned char * data2= extochar("dddddddddddddddddddddddddddddddddddddddddddddddddd",50);
+	int data_len2 = 25;
 	unsigned int len2 = 80;
 	unsigned char output2[len2];
 	
@@ -217,7 +218,7 @@ void check_prf(){
 	
 	}
 
-	int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
+int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
 		int i;
 		for(i=0; i<length; i++){
 			if(test[i] != toTest[i])
@@ -226,8 +227,40 @@ void check_prf(){
 		return 1;
 	}
 
+//input ptk pieno, output unsigned char tk
+unsigned char * tk_extract(unsigned char *ptk){
+	unsigned char *tk = (unsigned char*)malloc(sizeof(unsigned char)*16);
+	
+	int k;
+	for (k = 32;  k < 48;  k++) 
+		tk[k-32] = ptk[k];
+	return tk;
+	}
+
+void check_ptk(){
+	//Test vector OK per PTK
+	unsigned char * PMK = extochar("0dc0d6eb90555ed6419756b9a15ec3e3209b63df707dd508d14581f8982721af", 64);
+	unsigned char * AA = extochar("a0a1a1a3a4a5",12);
+	unsigned char * SPA = extochar("b0b1b2b3b4b5",12);
+	unsigned char * SNONCE = extochar("c0c1c2c3c4c5c6c7c8c9d0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5",64);
+	unsigned char * ANONCE = extochar("e0e1e2e3e4e5e6e7e8e9f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405",64);
+	unsigned char * tk;
+	unsigned char * ptk;
+	unsigned char * test = extochar("b2360c79e9710fdd58bea93deaf06599",32);
+	
+	ptk = PTK(PMK, ANONCE, SNONCE, AA, SPA);
+	tk = tk_extract(ptk);
+	
+	if(compare_test_vector(test, tk, 16)) //40 ne testa solo il primo pezzo, bisognerebbe contare la lunghezza di expected_output
+		printf("TK TEST VECTOR 1: OK\n");
+	else 
+		printf("TK TEST VECTOR 1: ERROR\n");
+	
+	}
+
 void main(){
 	check_prf();
+	check_ptk();
 /*
 	printf("debug-10\n");
 	unsigned char * key =extochar("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",40);
