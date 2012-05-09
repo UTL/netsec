@@ -1,0 +1,4 @@
+http://www.javvin.com/protocol80211i.html
+http://dox.ipxe.org/wpa__ccmp_8c_source.html
+http://dox.ipxe.org/structieee80211__frame.html
+http://www.binarytides.com/blog/packet-sniffer-code-in-c-using-linux-sockets-bsd/
