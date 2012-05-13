@@ -6,6 +6,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
+#include <openssl/aes.h>
 
 unsigned char * PTK (unsigned char *key, unsigned char * ANonce, unsigned char * SNonce, unsigned char * AA, unsigned char * SA);
 
@@ -341,11 +342,16 @@ void check_picci_stream(){
 	
 	} 
 
+void prove_aes(){
+	AES_KEY key; 
+
+	}
+
 void main(){
 	check_pbkdf2();
 	check_prf();
 	check_ptk();
-	
+
 	//testa tutto fino alla tk
 	check_picci_stream();
 	
