@@ -292,6 +292,7 @@ check_pbkdf2(){
 
 	out = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY);
 	
+	//NB non usare il wrapper con valori diversi non funziona!
 	PKCS5_PBKDF2_HMAC_SHA1(pwd, strlen(pwd), salt_value, strlen(salt_value), ITERA, KEK_KEY, out);
 	
 	unsigned char * test = extochar("0c60c80f961f0e71f3a9b524af6012062fe037a6");
@@ -312,6 +313,17 @@ check_pbkdf2(){
 	//printhex(out2, KEK_KEY_LEN);
 	}
 	
+
+unsigned char * calc_tk(unsigned char * human_readable_pw, unsigned char * ssid, unsigned char* sa, unsigned char* da, unsigned char* snonce, unsigned char * anonce){
+	
+	unsigned char *pmk = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
+	
+	pbkdf2(human_readable_pw, ssid, pmk);
+	
+	unsigned char *bigK = PTK(pmk, anonce, snonce, sa, da);
+	
+	return tk_extract(bigK);
+	}
 
 	
 	//testa tutto fino alla tk
@@ -340,22 +352,21 @@ void check_picci_stream(){
 	
 	print_check("PICCI STREAM", compare_test_vector(test_tk, tk, TK_LEN));
 	
+	char pwd2[] = "angelatramontano";
+	tk = calc_tk(pwd2, ssid, AP, STA, Anonce,Snonce);
+	
+	print_check("PICCI STREAM 2", compare_test_vector(test_tk, tk, TK_LEN));
+	
+	
 	} 
-
-unsigned char * calc_tk(unsigned char * human_readable_pw, unsigned char * ssid, unsigned char* sa, unsigned char* da, unsigned char* snonce, unsigned char * anonce){
-	
-	unsigned char *pmk = (unsigned char *) malloc(sizeof(unsigned char) * KEK_KEY_LEN);
-	
-	pbkdf2(human_readable_pw, ssid, pmk);
-	
-	unsigned char *bigK = PTK(pmk, anonce, snonce, sa, da);
-	
-	return tk_extract(bigK);
-	}
 
 void prove_aes(){
 	AES_KEY key; 
 
+	}
+
+void global_check(){
+	
 	}
 
 void main(){
@@ -365,7 +376,6 @@ void main(){
 
 	//testa tutto fino alla tk
 	check_picci_stream();
-	
 
 	/*
 	 * da fare:
