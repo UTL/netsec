@@ -6,10 +6,23 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #define member_size(type, member) sizeof(((type *)0)->member)
+u_char * BROADCAST;
+u_char * EAP;
 
 FILE *fp;
 int n_pacc;
+
+struct challenge_data{
+	u_char		anonce[32];
+	u_char		snonce[32];
+	u_char		dmac[6];
+	u_char		smac[6];
+	u_char		counter[8];
+	}
+
 struct mgmt_header_t {
     u_int16_t    fc;          /* 2 bytes */
     u_int16_t    duration;    /* 2 bytes */
@@ -42,17 +55,53 @@ struct eapol{
 	u_char nonce[32];
 	}__attribute__ (( packed ));
 
+
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
- 
-void printhex(unsigned char * toPrint, int length){
-	int k;
-	for (k = 0;  k < length;  k++) 
-		printf("%02x ", toPrint[k]);
-	
-	printf("\n");
+
+int chartoint(char car){
+	int intero = 0;
+	intero = car - '0';
+	if(intero < 10 && intero > -1)
+		return intero;
+	else
+		return car - 'a' + 10; //caratteri mappati diversamente
+
+}
+
+char * extochar(char * in, int inLen){
+	int i,k;
+	int resInt[inLen/2];
+	char * resChar=malloc(inLen/2);
+
+	k=0;
+	for(i=0; i<inLen/2; i=i++){
+		resInt[k]=chartoint(in[i*2])<<4;
+		resInt[k]+=chartoint(in[(i*2)+1]);
+		k++;
 	}
+
+	for(k=0; k<inLen/2;k++){
+		resChar[k]=(char)resInt[k];
+	}
+	return resChar;
+} 
+
+int u_char_differ(unsigned char *a, unsigned char *b, int size) {
+	while(size -- > 0) {
+		if ( *a != *b ) 
+			return 1;
+		a++; b++;
+	}
+	return 0;
+}
+
  
 int main() {
+	char ff[] = "ffffffffffff";
+	BROADCAST = extochar(ff, strlen(ff));
+	
+	char eap[] = "aaaa03000000888e";
+	EAP = extochar(eap, strlen(eap));
 	
 	n_pacc = 1;
 	pcap_t *descr;
@@ -65,7 +114,7 @@ int main() {
 		// "pcap_open_live() failed: " << errbuf << endl; TODO
 		return 1;
 	}
-	
+		
  	if(pcap_datalink(descr)==DLT_IEEE802_11_RADIO)
 			printf("radiotape!");
 			
@@ -95,23 +144,30 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 
 	struct mgmt_header_t *mac_header = (struct mgmt_header_t *) (packet+rh->it_len);
 	
-	
-	if(n_pacc == 59 || n_pacc == 60){
-		u_char * nonce = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) + sizeof(struct in_eapol)); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
-		int i;
-		printf("\nSperiamo nonce: \n");
-		for(i=0; i<32;i++)
-			printf("%.2x:", nonce[i]);
-		printf("\n");
-	}
-	
 	//u_int8_t buffer [200] = (u_int8_t *)(packet+rh->it_len);
 		
 	
-	fprintf(fp, "PACCHETTO NUMERO : %d\n", n_pacc); 
-	n_pacc++;
+	fprintf(fp, "PACCHETTO NUMERO : %d, dimensione pacchetto: %d \n", n_pacc, pkthdr->caplen); 
 	
-
+	
+	if(pkthdr->caplen < 49) //questo controllo andrebbe fatto prima di prendere i dati dal pacchetto con gli struct
+		fprintf(fp, "Pacchetto piccolo\n"); //scarto i pacchetti senza dati
+	else if(!u_char_differ(mac_header->da, BROADCAST, 6))
+		fprintf(fp, "Pacchetto broadcast\n"); //scarto i pacchetti broadcast
+	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, 8)){
+				u_char * llcc = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t));
+				printf("%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", llcc[0],llcc[1],llcc[2],llcc[3],llcc[4],llcc[5]);
+				printf("PACCHETTO NUMERO : %d E' EAP\n", n_pacc);
+			//if(n_pacc == 59 || n_pacc == 60){
+				u_char * nonce = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) + sizeof(struct in_eapol)); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
+				int i;
+				printf("\nSperiamo nonce: \n");
+				for(i=0; i<32;i++)
+					printf("%.2x:", nonce[i]);
+				printf("\n");
+			//}
+		}
+n_pacc++;
 	//if(mac_header->da[0] == (u_int8_t) 255 && mac_header->da[1] == (u_int8_t) 255 &&  mac_header->da[2] == (u_int8_t) 255 &&  mac_header->da[3] == (u_int8_t) 255 &&  mac_header->da[4] == (u_int8_t) 255 &&  mac_header->da[5]== (u_int8_t) 255)
 
 
