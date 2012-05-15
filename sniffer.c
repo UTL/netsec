@@ -180,8 +180,8 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 			memcpy(chall.anonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
 			
 			//WARNING MAC NON CONTROLLATI!!!
-			memcpy(chall.dmac, mac_header.da, MAC_SIZE);
-			memcpy(chall.smac, mac_header.sa, MAC_SIZE);
+			memcpy(chall.dmac, mac_header->da, MAC_SIZE);
+			memcpy(chall.smac, mac_header->sa, MAC_SIZE);
 			
 			printf("\nSperiamo anonce: \n");
 			for(i=0; i<NONCE_SIZE;i++)
