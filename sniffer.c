@@ -12,6 +12,7 @@
 #define member_size(type, member) sizeof(((type *)0)->member)
 #define NONCE_SIZE 32
 #define COUNTER_SIZE 8
+#define MAC_SIZE = 6
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -22,8 +23,8 @@ int n_pacc;
 struct challenge_data{
 	u_char		anonce[NONCE_SIZE];
 	u_char		snonce[NONCE_SIZE];
-	u_char		dmac[6];
-	u_char		smac[6];
+	u_char		dmac[MAC_SIZE];
+	u_char		smac[MAC_SIZE];
 	u_char		counter[COUNTER_SIZE];
 	};
 	
@@ -172,15 +173,21 @@ u_char * getNonce(const u_char* packet){
 
 void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header){
 	int i;
+		//nulla di inizializzato, copio primo nonce e i 2 mac, WARNING CONTROLLARE I MAC!!
 		if(isNull(chall.anonce, NONCE_SIZE)){
 			memcpy(chall.counter, getCounter(packet),COUNTER_SIZE);	
 			memcpy(chall.anonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
+			
+			//WARNING MAC NON CONTROLLATI!!!
+			memcpy(chall.dmac, mac_header.da, MAC_SIZE);
+			memcpy(chall.smac, mac_header.sa, MAC_SIZE);
 			
 			printf("\nSperiamo anonce: \n");
 			for(i=0; i<NONCE_SIZE;i++)
 				printf("%.2x:", chall.anonce[i]);
 			printf("\n");
 			}	
+		//primo nonce inizializzato, copio il secondo
 		else if(!u_char_differ(chall.counter, getCounter(packet) , COUNTER_SIZE)){
 			memcpy(chall.snonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
 			
