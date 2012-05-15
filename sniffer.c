@@ -12,7 +12,8 @@
 #define member_size(type, member) sizeof(((type *)0)->member)
 #define NONCE_SIZE 32
 #define COUNTER_SIZE 8
-#define MAC_SIZE = 6
+#define MAC_SIZE 6
+#define EAP_SIZE 8
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -213,9 +214,9 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 	
 	if(pkthdr->caplen < 49) //questo controllo andrebbe fatto prima di prendere i dati dal pacchetto con gli struct
 		fprintf(fp, "Pacchetto piccolo\n"); //scarto i pacchetti senza dati
-	else if(!u_char_differ(mac_header->da, BROADCAST, 6))
+	else if(!u_char_differ(mac_header->da, BROADCAST, MAC_SIZE))
 		fprintf(fp, "Pacchetto broadcast\n"); //scarto i pacchetti broadcast
-	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, 8)){
+	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, EAP_SIZE)){
 		eap_mgmt(packet, rh, mac_header);
 		}
 
