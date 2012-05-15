@@ -10,6 +10,9 @@
 
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
+#define NONCE_SIZE 32
+#define COUNTER_SIZE 8
+
 u_char * BROADCAST;
 u_char * EAP;
 
@@ -17,14 +20,14 @@ FILE *fp;
 int n_pacc;
 
 struct challenge_data{
-	u_char		anonce[32];
-	u_char		snonce[32];
+	u_char		anonce[NONCE_SIZE];
+	u_char		snonce[NONCE_SIZE];
 	u_char		dmac[6];
 	u_char		smac[6];
-	u_char		counter[8];
-	}
+	u_char		counter[COUNTER_SIZE];
+	};
 	
-struct challenge_data chall;
+
 
 struct mgmt_header_t {
     u_int16_t    fc;          /* 2 bytes */
@@ -34,6 +37,8 @@ struct mgmt_header_t {
     u_int8_t     bssid[6];    /* 6 bytes */
     u_int16_t    seq_ctrl;    /* 2 bytes */
 } __attribute__ (( packed ));
+
+struct challenge_data chall;
 
 struct ieee80211_radiotap_header{
     u_int8_t it_version;
@@ -56,7 +61,7 @@ struct in_eapol{
 
 struct eapol{
 	struct in_eapol params;
-	u_char nonce[32];
+	u_char nonce[NONCE_SIZE];
 	}__attribute__ (( packed ));
 
 
@@ -102,11 +107,15 @@ int u_char_differ(unsigned char *a, unsigned char *b, int size) {
 
  
 int main() {
+	struct challenge_data chall2;
 	char ff[] = "ffffffffffff";
 	BROADCAST = extochar(ff, strlen(ff));
 	
 	char eap[] = "aaaa03000000888e";
 	EAP = extochar(eap, strlen(eap));
+	
+	memset (chall.anonce,'\0',NONCE_SIZE);
+	memset (chall.snonce,'\0',NONCE_SIZE);
 	
 	n_pacc = 1;
 	pcap_t *descr;
@@ -142,35 +151,56 @@ int main() {
 	return 0;
 }
 
-u_char * getCounter(const u_char* packet, struct ieee80211_radiotap_header *rh){
+int isNull(u_char * str, int len){
+	while(len -- > 0) {
+		if ( *str != '\0' ) 
+			return 0;
+		str++;
+	}
+	return 1;
+	}
+
+u_char * getCounter(const u_char* packet){
+	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
 	return (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) +EAP_TO_COUNTER);
 	}
 
-void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header){
-		
-		if(chall->counter == NULL)
-			chall->counter = getCounter(packet, rh);
-		else if(!u_char_differ(chall->counter, getCounter(packet, rh) , 8)){
-			u_char * llcc = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t));
-			printf("%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", llcc[0],llcc[1],llcc[2],llcc[3],llcc[4],llcc[5]);
-			printf("PACCHETTO NUMERO : %d E' EAP\n", n_pacc);
+u_char * getNonce(const u_char* packet){
+	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
+	return (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) + sizeof(struct in_eapol));
+	}
 
-			u_char * nonce = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) + sizeof(struct in_eapol)); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
-			int i;
-			printf("\nSperiamo nonce: \n");
-			for(i=0; i<32;i++)
-				printf("%.2x:", nonce[i]);
+void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header){
+	int i;
+		if(isNull(chall.anonce, NONCE_SIZE)){
+			memcpy(chall.counter, getCounter(packet),COUNTER_SIZE);	
+			memcpy(chall.anonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
+			
+			printf("\nSperiamo anonce: \n");
+			for(i=0; i<NONCE_SIZE;i++)
+				printf("%.2x:", chall.anonce[i]);
+			printf("\n");
+			}	
+		else if(!u_char_differ(chall.counter, getCounter(packet) , COUNTER_SIZE)){
+			memcpy(chall.snonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
+			
+			printf("\nSperiamo snonce: \n");
+			for(i=0; i<NONCE_SIZE;i++)
+				printf("%.2x:", chall.snonce[i]);
 			printf("\n");
 		}
+		
 	}
 
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
-	
+
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
+
 
 	struct mgmt_header_t *mac_header = (struct mgmt_header_t *) (packet+rh->it_len);
 
+	
 	fprintf(fp, "PACCHETTO NUMERO : %d, dimensione pacchetto: %d \n", n_pacc, pkthdr->caplen); 
 	
 	
@@ -181,14 +211,14 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, 8)){
 		eap_mgmt(packet, rh, mac_header);
 		}
-n_pacc++;
+
+	n_pacc++;
 	//if(mac_header->da[0] == (u_int8_t) 255 && mac_header->da[1] == (u_int8_t) 255 &&  mac_header->da[2] == (u_int8_t) 255 &&  mac_header->da[3] == (u_int8_t) 255 &&  mac_header->da[4] == (u_int8_t) 255 &&  mac_header->da[5]== (u_int8_t) 255)
 
-
-	fprintf(fp, "MAC da: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->da[0], mac_header->da[1], mac_header->da[2], mac_header->da[3], mac_header->da[4], mac_header->da[5]);
+	/*fprintf(fp, "MAC da: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->da[0], mac_header->da[1], mac_header->da[2], mac_header->da[3], mac_header->da[4], mac_header->da[5]);
 	fprintf(fp, "MAC sa  : %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->sa[0], mac_header->sa[1], mac_header->sa[2], mac_header->sa[3], mac_header->sa[4], mac_header->sa[5]);
 	fprintf(fp, "MAC bssid  : %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->bssid[0], mac_header->bssid[1], mac_header->bssid[2], mac_header->bssid[3], mac_header->bssid[4], mac_header->bssid[5]);
-
+	*/
 	
 	//ethernetHeader = (struct ether_header*)packet;
 	
