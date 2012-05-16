@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils.h"
 
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
@@ -14,6 +15,8 @@
 #define COUNTER_SIZE 8
 #define MAC_SIZE 6
 #define EAP_SIZE 8
+#define BCAST_CONST "ffffffffffff"
+#define EAP_CONST "aaaa03000000888e"
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -28,7 +31,6 @@ struct challenge_data{
 	u_char		smac[MAC_SIZE];
 	u_char		counter[COUNTER_SIZE];
 	};
-	
 
 
 struct mgmt_header_t {
@@ -67,54 +69,14 @@ struct eapol{
 	}__attribute__ (( packed ));
 
 
-
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
-
-int chartoint(char car){
-	int intero = 0;
-	intero = car - '0';
-	if(intero < 10 && intero > -1)
-		return intero;
-	else
-		return car - 'a' + 10; //caratteri mappati diversamente
-
-}
-
-char * extochar(char * in, int inLen){
-	int i,k;
-	int resInt[inLen/2];
-	char * resChar=malloc(inLen/2);
-
-	k=0;
-	for(i=0; i<inLen/2; i=i++){
-		resInt[k]=chartoint(in[i*2])<<4;
-		resInt[k]+=chartoint(in[(i*2)+1]);
-		k++;
-	}
-
-	for(k=0; k<inLen/2;k++){
-		resChar[k]=(char)resInt[k];
-	}
-	return resChar;
-} 
-
-int u_char_differ(unsigned char *a, unsigned char *b, int size) {
-	while(size -- > 0) {
-		if ( *a != *b ) 
-			return 1;
-		a++; b++;
-	}
-	return 0;
-}
 
  
 int main() {
 	struct challenge_data chall2;
-	char ff[] = "ffffffffffff";
-	BROADCAST = extochar(ff, strlen(ff));
+	BROADCAST = extochar(BCAST_CONST);
 	
-	char eap[] = "aaaa03000000888e";
-	EAP = extochar(eap, strlen(eap));
+	EAP = extochar(EAP_CONST);
 	
 	memset (chall.anonce,'\0',NONCE_SIZE);
 	memset (chall.snonce,'\0',NONCE_SIZE);
@@ -153,14 +115,6 @@ int main() {
 	return 0;
 }
 
-int isNull(u_char * str, int len){
-	while(len -- > 0) {
-		if ( *str != '\0' ) 
-			return 0;
-		str++;
-	}
-	return 1;
-	}
 
 u_char * getCounter(const u_char* packet){
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;

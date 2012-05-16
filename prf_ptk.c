@@ -7,6 +7,7 @@
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
 #include <openssl/aes.h>
+#include "utils.h"
 
 #define KEK_KEY_LEN 32
 #define ITERATION 4096
@@ -16,13 +17,10 @@ unsigned char * PTK (unsigned char *key, unsigned char * ANonce, unsigned char *
 
 void PRF(unsigned char *key, int key_len,unsigned char *prefix, int prefix_len,unsigned char *data, int data_len,unsigned char *output, unsigned int len);
 
-char * extochar(char * in);
-
-int compare_test_vector(unsigned char * test, unsigned char * toTest, int length);
-
-int chartoint(char car);
-
 void check_prf();
+
+void print_check(char * tipo_test, int testOk);
+
 
 void print_check(char * tipo_test, int testOk){
 	printf("TEST VECTOR %s:",tipo_test);
@@ -32,44 +30,6 @@ void print_check(char * tipo_test, int testOk){
 		printf(" FALLITO\n");
 	}
 
-void printhex(unsigned char * toPrint, int length){
-	int k;
-	for (k = 0;  k < length;  k++) 
-		printf("%02x ", toPrint[k]);
-	
-	printf("\n");
-	}
-
-//da esadecimale a char
-char * extochar(char * in){
-	int inLen = strlen(in);
-	int i,k;
-	int resInt[inLen/2];
-	char * resChar=malloc(inLen/2);
-
-	k=0;
-	for(i=0; i<inLen/2; i=i++){
-		resInt[k]=chartoint(in[i*2])<<4;
-		resInt[k]+=chartoint(in[(i*2)+1]);
-		k++;
-	}
-
-	for(k=0; k<inLen/2;k++){
-		resChar[k]=(char)resInt[k];
-	}
-	return resChar;
-}
-
-// traduce da carattere a intero '0' -> 0 'a'->10
-int chartoint(char car){
-	int intero = 0;
-	intero = car - '0';
-	if(intero < 10 && intero > -1)
-		return intero;
-	else
-		return car - 'a' + 10; //caratteri mappati diversamente
-
-}
 
 /*	IN: PSK (credo), 2 Nonce, 2 MAC Address
 	OUT: PTK
@@ -238,14 +198,7 @@ void check_prf(){
 	print_check("PRF 4", compare_test_vector(test4, output4, 40));
 	}
 
-int compare_test_vector(unsigned char * test, unsigned char * toTest, int length){
-		int i;
-		for(i=0; i<length; i++){
-			if(test[i] != toTest[i])
-				return 0;
-		}
-		return 1;
-	}
+
 
 //input ptk pieno, output unsigned char tk
 unsigned char * tk_extract(unsigned char *ptk){
@@ -360,15 +313,6 @@ void check_picci_stream(){
 	
 	} 
 
-void prove_aes(){
-	AES_KEY key; 
-
-	}
-
-void global_check(){
-	
-	}
-
 void main(){
 	check_pbkdf2();
 	check_prf();
@@ -380,10 +324,6 @@ void main(){
 	/*
 	 * da fare:
 	 * cercare la funzione CCM in OPENSSL
-	 * estrarre a mano i campi dei pacchetti da wireshark
 	 * provare la funzione CCM
-	 * curiosare nelle librerie pcap
-	 * estrarre dati con le pcap
-	 *
 	 */
 }
