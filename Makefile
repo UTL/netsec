@@ -9,7 +9,7 @@ OUT_SNIFFER=sniffer
 UTILS=utils.c
 
 all:
-	gcc $(INCDIR) `pkg-config --libs $(LIBS)` $(PRF) $(SNIFFER) -o $(OUTFILE)
+	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) -o $(OUTFILE)
 
 
 prf:

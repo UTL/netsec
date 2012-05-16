@@ -71,8 +71,20 @@ struct eapol{
 
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 
+
+void run_tv_check(){
+	check_pbkdf2();
+	check_prf();
+	check_ptk();
+
+	//testa tutto fino alla tk
+	check_picci_stream();
+	}
  
 int main() {
+	run_tv_check();
+	
+	
 	struct challenge_data chall2;
 	BROADCAST = extochar(BCAST_CONST);
 	

@@ -313,6 +313,7 @@ void check_picci_stream(){
 	
 	} 
 
+/*
 void main(){
 	check_pbkdf2();
 	check_prf();
@@ -326,4 +327,4 @@ void main(){
 	 * cercare la funzione CCM in OPENSSL
 	 * provare la funzione CCM
 	 */
-}
+//}
