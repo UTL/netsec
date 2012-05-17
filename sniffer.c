@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils.h"
+#include "prf_ptk.h"
 
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
@@ -21,6 +22,8 @@
 #define MY_CAP "./maistrim.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
+#define PWD_SIZE 63
+#define TK_SIZE 128
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -29,11 +32,14 @@ FILE *fp;
 int n_pacc;
 
 struct challenge_data{
-	u_char		anonce[NONCE_SIZE];
-	u_char		snonce[NONCE_SIZE];
-	u_char		dmac[MAC_SIZE];
-	u_char		smac[MAC_SIZE];
-	u_char		counter[COUNTER_SIZE];
+	unsigned char		anonce[NONCE_SIZE];
+	unsigned char		snonce[NONCE_SIZE];
+	unsigned char		dmac[MAC_SIZE];
+	unsigned char		smac[MAC_SIZE];
+	char		ssid[PWD_SIZE+1];
+	char		pwd[PWD_SIZE+1];
+	unsigned char		tk[TK_SIZE];
+	unsigned char		counter[COUNTER_SIZE];
 	};
 
 
@@ -97,9 +103,13 @@ int main() {
 	memset (chall.anonce,'\0',NONCE_SIZE);
 	memset (chall.snonce,'\0',NONCE_SIZE);
 	
+	strcpy(chall.ssid,"Sitecom");
+	strcpy(chall.pwd, "angelatramontano");
 	n_pacc = 1;
 	pcap_t *descr;
 	char errbuf[PCAP_ERRBUF_SIZE];
+	
+	
 
 	// open capture file for offline processing
 	descr = pcap_open_offline(UNI_CAP, errbuf);
@@ -166,10 +176,27 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 			for(i=0; i<NONCE_SIZE;i++)
 				printf("%.2x:", chall.snonce[i]);
 			printf("\n");
+			
+			unsigned char *tk = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce, chall.snonce);
+			
+			//u_char * tk   = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce,chall.snonce);
 		}
 		
 	}
 
+/*
+int ssidNeeded(){
+	if(!isNull(chall.anonce, NONCE_SIZE) && !isNull(chall.snonce, NONCE_SIZE) && )
+		return 1;
+	return 0;
+	}
+
+void getSsid(struct mgmt_header_t *mac_header){
+	
+	if(!isNull(chall.smac, MAC_SIZE) && (!u_char_differ( mac_header->sa, BROADCAST, MAC_SIZE) || !u_char_differ(mac_header->sa, BROADCAST, MAC_SIZE)))
+		if(!u_char_differ(mac_header->da, BROADCAST, MAC_SIZE))
+	}
+*/
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
 
