@@ -1,12 +1,20 @@
 #include <stdlib.h>
-#include <stdio.h> 
+#include <stdio.h>
+#include <string.h>
 #include "dyn_array.h"
 #include "utils.h"
+
+#define BY_MAC 1
+#define BY_COUNTER 2
+#define BY_SSID 3
 
 struct challenge_data *the_array = NULL;
 
 int     num_elements = 0; // Keeps track of the number of elements used
 int     num_allocated = 0; // This is essentially how large the array is
+char * ssid;
+char * pw;
+unsigned char ap_mac[MAC_SIZE];
 
 int getArraySize(){
 	return num_elements;
@@ -22,46 +30,52 @@ struct challenge_data * getI(int i){
 	return NULL;
 	}
 
-struct challenge_data * getByMac(unsigned char * mac){
-	if(num_elements <1)
-		return NULL;
-	else {
-		int i;
-		for(i=0; i < num_elements; i++){
-			if(!u_char_differ(getI(i)->smac, mac, MAC_SIZE) || !u_char_differ(getI(i)->dmac, mac, MAC_SIZE))
-				return getI(i);
-			}
-		}
-	return NULL;
+void setSsid(char * newSsid){
+	ssid = (char * )(malloc(sizeof(newSsid)));
+	strcpy(ssid,newSsid);
 	}
-	
-	struct challenge_data * getByCounter(unsigned char * counter){
-	if(num_elements <1)
-		return NULL;
-	else {
-		int i;
-		for(i=0; i < num_elements; i++){
-			if(!u_char_differ(getI(i)->counter, counter, COUNTER_SIZE))
-				return getI(i);
-			}
-		}
-	return NULL;
+
+//WARNING 2 ap sullo stesso canale con lo stesso ssid danno problemi
+void setApMac(unsigned char * mac){
+		memcpy(ap_mac, mac, MAC_SIZE);
 	}
-	
-struct challenge_data *getBySsid(char * ssid){
-	if(num_elements <1)
-		return NULL;
-	else{
-		int i;
-		 for(i=0; i < num_elements; i++){
-			if(!strcmp(ssid, ssid))
+
+void setPw(char * newPw){
+	pw = malloc(sizeof(newPw));
+	strcpy(pw,newPw);
+	}
+
+struct challenge_data * getChall(unsigned char * var, int type){
+	int i;
+	for(i=0; i < num_elements; i++){
+		switch(type){
+		case BY_MAC:
+			if(!u_char_differ(getI(i)->smac, var, MAC_SIZE) || !u_char_differ(getI(i)->dmac, var, MAC_SIZE))
 				return getI(i);
-			}
+		case BY_COUNTER:
+			if(!u_char_differ(getI(i)->counter, var, COUNTER_SIZE))
+				return getI(i);
+		case BY_SSID:
+			if(!u_char_differ(var, ssid, strlen(ssid)))
+				return getI(i);
 		}
+	}
 	return NULL;
 	}
 
-int AddToArray (struct challenge_data item)
+struct challenge_data * getByMac(unsigned char * s){
+	return getChall(s, BY_MAC);
+	}
+
+	struct challenge_data * getByCounter(unsigned char * c){
+		return getChall(c, BY_COUNTER);
+	}
+	
+struct challenge_data *getBySsid(char * c){
+	return getChall(c, BY_COUNTER);
+	}
+
+int pushTo(struct challenge_data item)
 {
         if(num_elements == num_allocated) // Are more refs required?
         {

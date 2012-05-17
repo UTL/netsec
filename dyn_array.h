@@ -16,12 +16,25 @@ struct challenge_data{
 	char				pwd[PWD_SIZE+1];
 	unsigned char		tk[TK_SIZE];
 	unsigned char		counter[COUNTER_SIZE];
-	}C_DATA;
+	};
+	
+struct eapData{
+	unsigned char		anonce[NONCE_SIZE];
+	unsigned char		snonce[NONCE_SIZE];
+	unsigned char		smac[MAC_SIZE];
+	unsigned char		counter[COUNTER_SIZE];
+	int					status;//stato dell'handshake, cresce coi pacchetti 1 2 3 4, quando arriva a 4 abbiamo finito
+	};
+	
+struct auth{
+	unsigned char		staMac[MAC_SIZE];
+	unsigned char		tk[TK_SIZE];
+	};
 
 int getArraySize();
 
 void deleteArray();
 
-int AddToArray(struct challenge_data item);
+int pushTo(struct challenge_data item);
 
 #endif
