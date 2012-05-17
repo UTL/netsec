@@ -17,6 +17,10 @@
 #define EAP_SIZE 8
 #define BCAST_CONST "ffffffffffff"
 #define EAP_CONST "aaaa03000000888e"
+#define HA_CAP "./wpa/cap/handshake_angie.cap"
+#define MY_CAP "./maistrim.cap"
+#define UNI_CAP "./wpa/cap/uni.cap"
+#define FC_BEACON 0x80
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -98,7 +102,7 @@ int main() {
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	// open capture file for offline processing
-	descr = pcap_open_offline("./wpa/cap/handshake_angie.cap", errbuf);
+	descr = pcap_open_offline(UNI_CAP, errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
 		// "pcap_open_live() failed: " << errbuf << endl; TODO
@@ -169,6 +173,7 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
 
+	
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
 
 
@@ -185,8 +190,18 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, EAP_SIZE)){
 		eap_mgmt(packet, rh, mac_header);
 		}
+	if((mac_header->fc & 0xff) == FC_BEACON){
+		u_int8_t * length = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t) + sizeof(u_char)*13);
+		printf("Ho trovato un beacon n %d, length %d\n", n_pacc, *length);
+		u_char * ssid = (u_char *) (length + sizeof(u_char));
+		u_char str_ssid[*length+1];
+		memcpy(str_ssid, ssid, *length);
+		str_ssid[*length]= '\0';
+		printf("ssid %s\n",str_ssid);
+		}
 
 	n_pacc++;
+	
 	//if(mac_header->da[0] == (u_int8_t) 255 && mac_header->da[1] == (u_int8_t) 255 &&  mac_header->da[2] == (u_int8_t) 255 &&  mac_header->da[3] == (u_int8_t) 255 &&  mac_header->da[4] == (u_int8_t) 255 &&  mac_header->da[5]== (u_int8_t) 255)
 
 	/*fprintf(fp, "MAC da: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->da[0], mac_header->da[1], mac_header->da[2], mac_header->da[3], mac_header->da[4], mac_header->da[5]);
