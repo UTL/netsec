@@ -3,3 +3,5 @@ output.txt
 out
 *~
 wpa/*
+!wpa/cap/*.cap
+*.orig

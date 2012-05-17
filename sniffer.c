@@ -9,12 +9,11 @@
 #include <stdlib.h>
 #include "utils.h"
 #include "prf_ptk.h"
+#include "dyn_array.h"
 
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
-#define NONCE_SIZE 32
-#define COUNTER_SIZE 8
-#define MAC_SIZE 6
+
 #define EAP_SIZE 8
 #define BCAST_CONST "ffffffffffff"
 #define EAP_CONST "aaaa03000000888e"
@@ -22,8 +21,7 @@
 #define MY_CAP "./maistrim.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
-#define PWD_SIZE 63
-#define TK_SIZE 128
+
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -31,16 +29,6 @@ u_char * EAP;
 FILE *fp;
 int n_pacc;
 
-struct challenge_data{
-	unsigned char		anonce[NONCE_SIZE];
-	unsigned char		snonce[NONCE_SIZE];
-	unsigned char		dmac[MAC_SIZE];
-	unsigned char		smac[MAC_SIZE];
-	char		ssid[PWD_SIZE+1];
-	char		pwd[PWD_SIZE+1];
-	unsigned char		tk[TK_SIZE];
-	unsigned char		counter[COUNTER_SIZE];
-	};
 
 
 struct mgmt_header_t {
@@ -184,13 +172,17 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 		
 	}
 
-/*
-int ssidNeeded(){
-	if(!isNull(chall.anonce, NONCE_SIZE) && !isNull(chall.snonce, NONCE_SIZE) && )
-		return 1;
+
+int ssidNeeded(struct mgmt_header_t *mac_header){
+	//se ho i nonce, ma non ho il ssid
+	//if(chall)
+	mac_header->sa;
+	if(!isNull(chall.anonce, NONCE_SIZE) && !isNull(chall.snonce, NONCE_SIZE))
+		if(!(u_char_differ(mac_header->sa, chall.dmac, MAC_SIZE)) || !(u_char_differ(mac_header->sa, chall.smac, MAC_SIZE)))
+			return 1;
 	return 0;
 	}
-
+/*
 void getSsid(struct mgmt_header_t *mac_header){
 	
 	if(!isNull(chall.smac, MAC_SIZE) && (!u_char_differ( mac_header->sa, BROADCAST, MAC_SIZE) || !u_char_differ(mac_header->sa, BROADCAST, MAC_SIZE)))

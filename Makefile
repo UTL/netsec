@@ -7,10 +7,10 @@ PRF=prf_ptk.c
 SNIFFER=sniffer.c
 OUT_SNIFFER=sniffer
 UTILS=utils.c
+ARRAY=dyn_array.c
 
 all:
-	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) -o $(OUTFILE)
-
+	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) $(ARRAY) -o $(OUTFILE)
 
 prf:
 	gcc $(INCDIR) `pkg-config --libs $(LIBS)` $(PRF) $(UTILS) -o $(OUTFILE)
