@@ -11,7 +11,7 @@ ARRAY=dyn_array.c
 HANDL=handler.c
 
 all:
-	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) $(ARRAY) -o $(OUTFILE)
+	gcc $(INCDIR) -g `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) $(HANDL) -o $(OUTFILE)
 
 prf:
 	gcc $(INCDIR) `pkg-config --libs $(LIBS)` $(PRF) $(UTILS) -o $(OUTFILE)

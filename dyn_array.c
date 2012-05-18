@@ -76,10 +76,6 @@ struct challenge_data *getBySsid(char * c){
 
 
 
-void setEap(unsigned char * nonce, unsigned char * count){
-	if()
-	}
-
 int pushTo(struct challenge_data item)
 {
         if(num_elements == num_allocated) // Are more refs required?

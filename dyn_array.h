@@ -1,11 +1,9 @@
+#include "utils.h"
+
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#define PWD_SIZE 63
-#define TK_SIZE 128
-#define NONCE_SIZE 32
-#define COUNTER_SIZE 8
-#define MAC_SIZE 6
+
 
 struct challenge_data{
 	unsigned char		anonce[NONCE_SIZE];

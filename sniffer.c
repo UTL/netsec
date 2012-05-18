@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "utils.h"
 #include "prf_ptk.h"
-#include "dyn_array.h"
+#include "handler.h"
 
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
@@ -17,7 +17,7 @@
 #define EAP_SIZE 8
 #define BCAST_CONST "ffffffffffff"
 #define EAP_CONST "aaaa03000000888e"
-#define HA_CAP "./wpa/cap/handshake_angie.cap"
+#define HA_CAP "/home/enrico/develop/netsec/wpa/cap/handshake_angie.cap"
 #define MY_CAP "./maistrim.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
@@ -40,7 +40,7 @@ struct mgmt_header_t {
     u_int16_t    seq_ctrl;    /* 2 bytes */
 } __attribute__ (( packed ));
 
-struct challenge_data chall;
+//struct challenge_data chall;
 
 struct ieee80211_radiotap_header{
     u_int8_t it_version;
@@ -83,16 +83,18 @@ int main() {
 	run_tv_check();
 	
 	
-	struct challenge_data chall2;
+	//struct challenge_data chall2;
 	BROADCAST = extochar(BCAST_CONST);
 	
 	EAP = extochar(EAP_CONST);
 	
-	memset (chall.anonce,'\0',NONCE_SIZE);
-	memset (chall.snonce,'\0',NONCE_SIZE);
+	//memset (chall.anonce,'\0',NONCE_SIZE);
+	//memset (chall.snonce,'\0',NONCE_SIZE);
 	
-	strcpy(chall.ssid,"Sitecom");
-	strcpy(chall.pwd, "angelatramontano");
+	init("Sitecom", "angelatramontano");
+	
+	//strcpy(chall.ssid,"Sitecom");
+	//strcpy(chall.pwd, "angelatramontano");
 	n_pacc = 1;
 	pcap_t *descr;
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -100,7 +102,7 @@ int main() {
 	
 
 	// open capture file for offline processing
-	descr = pcap_open_offline(UNI_CAP, errbuf);
+	descr = pcap_open_offline(HA_CAP, errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
 		// "pcap_open_live() failed: " << errbuf << endl; TODO
@@ -141,7 +143,10 @@ u_char * getNonce(const u_char* packet){
 	}
 
 void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header){
-	int i;
+	//WARNING controllare la lunghezza dei pacchetti prima di fare getcounter e getnonce
+
+	setEap(getNonce(packet), getCounter(packet), mac_header->sa, mac_header->da);
+	/*int i;
 		//nulla di inizializzato, copio primo nonce e i 2 mac, WARNING CONTROLLARE I MAC!!
 		if(isNull(chall.anonce, NONCE_SIZE)){
 			memcpy(chall.counter, getCounter(packet),COUNTER_SIZE);	
@@ -168,11 +173,14 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 			unsigned char *tk = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce, chall.snonce);
 			
 			//u_char * tk   = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce,chall.snonce);
+			* 
+			* 
+			* 
 		}
-		
+		*/
 	}
 
-
+/*
 int ssidNeeded(struct mgmt_header_t *mac_header){
 	//se ho i nonce, ma non ho il ssid
 	//if(chall)
@@ -182,6 +190,7 @@ int ssidNeeded(struct mgmt_header_t *mac_header){
 			return 1;
 	return 0;
 	}
+	* */
 /*
 void getSsid(struct mgmt_header_t *mac_header){
 	
@@ -207,16 +216,19 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 	else if(!u_char_differ(mac_header->da, BROADCAST, MAC_SIZE))
 		fprintf(fp, "Pacchetto broadcast\n"); //scarto i pacchetti broadcast
 	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, EAP_SIZE)){
+		//WARNING controllare la lunghezza dei pacchetti prima di fare getcounter e getnonce
 		eap_mgmt(packet, rh, mac_header);
 		}
 	if((mac_header->fc & 0xff) == FC_BEACON){
+		
 		u_int8_t * length = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t) + sizeof(u_char)*13);
-		printf("Ho trovato un beacon n %d, length %d\n", n_pacc, *length);
+		//printf("Ho trovato un beacon n %d, length %d\n", n_pacc, *length);
 		u_char * ssid = (u_char *) (length + sizeof(u_char));
 		u_char str_ssid[*length+1];
 		memcpy(str_ssid, ssid, *length);
 		str_ssid[*length]= '\0';
-		printf("ssid %s\n",str_ssid);
+		setBeacon(str_ssid, mac_header->sa);
+		//printf("ssid %s\n",str_ssid);
 		}
 
 	n_pacc++;
