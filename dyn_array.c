@@ -10,15 +10,12 @@
 
 struct challenge_data *the_array = NULL;
 
-int     num_elements = 0; // Keeps track of the number of elements used
-int     num_allocated = 0; // This is essentially how large the array is
+int     eap_elements = 0; // Keeps track of the number of elements used
+int     eap_allocated = 0; // This is essentially how large the array is
+
 char * ssid;
 char * pw;
-unsigned char ap_mac[MAC_SIZE];
-
-int getArraySize(){
-	return num_elements;
-	}
+unsigned char * ap_mac;
 
 void deleteArray(){
 	free(the_array);
@@ -35,9 +32,11 @@ void setSsid(char * newSsid){
 	strcpy(ssid,newSsid);
 	}
 
-//WARNING 2 ap sullo stesso canale con lo stesso ssid danno problemi
 void setApMac(unsigned char * mac){
+	if(ap_mac == NULL){
+		ap_mac = (unsigned char * )(malloc(sizeof(MAC_SIZE)));
 		memcpy(ap_mac, mac, MAC_SIZE);
+		}
 	}
 
 void setPw(char * newPw){
@@ -73,6 +72,12 @@ struct challenge_data * getByMac(unsigned char * s){
 	
 struct challenge_data *getBySsid(char * c){
 	return getChall(c, BY_COUNTER);
+	}
+
+
+
+void setEap(unsigned char * nonce, unsigned char * count){
+	if()
 	}
 
 int pushTo(struct challenge_data item)

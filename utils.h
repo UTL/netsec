@@ -13,6 +13,6 @@ int u_char_differ(unsigned char *a, unsigned char *b, int size);
 
 int compare_test_vector(unsigned char * test, unsigned char * toTest, int length);
 
-int isNull(u_char * str, int len);
+int isNull(unsigned char * str, int len);
 
 #endif

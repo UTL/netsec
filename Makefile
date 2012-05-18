@@ -8,6 +8,7 @@ SNIFFER=sniffer.c
 OUT_SNIFFER=sniffer
 UTILS=utils.c
 ARRAY=dyn_array.c
+HANDL=handler.c
 
 all:
 	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(PRF) $(SNIFFER) $(UTILS) $(ARRAY) -o $(OUTFILE)
@@ -17,6 +18,9 @@ prf:
 
 sniffer:
 	gcc $(INCDIR) $(SNIFFER) $(UTILS) -o $(OUT_SNIFFER) -lpcap
+
+handler:
+	gcc $(INCDIR) `pkg-config --libs $(LIBS)` -lpcap $(HANDL) $(UTILS) -o $(OUTFILE)
 
 clean:
 	find -iname "*.o" -type f -print0 | xargs -0 rm -f
