@@ -21,6 +21,7 @@
 #define MY_CAP "./maistrim.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
+#define FC_DATA 0x08
 
 
 u_char * BROADCAST;
@@ -31,23 +32,7 @@ int n_pacc;
 
 
 
-struct mgmt_header_t {
-    u_int16_t    fc;          /* 2 bytes */
-    u_int16_t    duration;    /* 2 bytes */
-    u_int8_t     da[6];       /* 6 bytes */
-    u_int8_t     sa[6];       /* 6 bytes */
-    u_int8_t     bssid[6];    /* 6 bytes */
-    u_int16_t    seq_ctrl;    /* 2 bytes */
-} __attribute__ (( packed ));
 
-//struct challenge_data chall;
-
-struct ieee80211_radiotap_header{
-    u_int8_t it_version;
-    u_int8_t it_pad;
-    u_int16_t it_len;
-    u_int32_t it_present;
-}__attribute__ (( packed ));
 
 struct llc{
 	u_char	data[8]; 
@@ -198,6 +183,7 @@ void getSsid(struct mgmt_header_t *mac_header){
 		if(!u_char_differ(mac_header->da, BROADCAST, MAC_SIZE))
 	}
 */
+
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
 
@@ -220,17 +206,23 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		eap_mgmt(packet, rh, mac_header);
 		}
 	if((mac_header->fc & 0xff) == FC_BEACON){
+		//lunghezza dello ssid
+		u_int8_t * ssidLength = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t) + sizeof(u_char)*13);
+
+		//puntatore all'inizio del ssid
+		u_char * ssid = (u_char *) (ssidLength + sizeof(u_char));
 		
-		u_int8_t * length = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t) + sizeof(u_char)*13);
-		//printf("Ho trovato un beacon n %d, length %d\n", n_pacc, *length);
-		u_char * ssid = (u_char *) (length + sizeof(u_char));
-		u_char str_ssid[*length+1];
-		memcpy(str_ssid, ssid, *length);
-		str_ssid[*length]= '\0';
+		u_char str_ssid[*ssidLength+1];
+		memcpy(str_ssid, ssid, *ssidLength);
+		
+		str_ssid[*ssidLength]= '\0';
+		
 		setBeacon(str_ssid, mac_header->sa);
 		//printf("ssid %s\n",str_ssid);
 		}
-
+	else if((mac_header->fc & 0xff) == FC_DATA){
+		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet));
+	}
 	n_pacc++;
 	
 	//if(mac_header->da[0] == (u_int8_t) 255 && mac_header->da[1] == (u_int8_t) 255 &&  mac_header->da[2] == (u_int8_t) 255 &&  mac_header->da[3] == (u_int8_t) 255 &&  mac_header->da[4] == (u_int8_t) 255 &&  mac_header->da[5]== (u_int8_t) 255)

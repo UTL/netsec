@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pcap.h>
 #include "utils.h"
 #include "handler.h"
 #include "prf_ptk.h"
+
 
 #define PWD_SIZE 63
 #define TK_SIZE 128
@@ -117,6 +119,38 @@ void setBeacon(char * newSid, unsigned char * newMac){
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
 	}
 
+void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
+	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
+
+	struct mgmt_header_t *mac_header = (struct mgmt_header_t *) (packet+rh->it_len);
+	
+	unsigned char * a2 = mac_header->sa;
+	
+	unsigned char * tempIv = (unsigned char *)(packet+rh->it_len+sizeof(struct mgmt_header_t));
+	
+	unsigned char iv[6];
+	iv[0]=tempIv[7];
+	iv[1]=tempIv[6];
+	iv[2]=tempIv[5];
+	iv[3]=tempIv[4];
+	iv[4]=tempIv[1];
+	iv[5]=tempIv[0];
+	
+	unsigned char nonce[13];
+	nonce[0]= 0x00;
+	memcpy(&nonce[1], a2, MAC_SIZE);
+	memcpy(&nonce[7],&iv[0], 6);
+	
+	/*
+	int i;
+	for(i=0; i<13; i++)
+		printf("%02x ", nonce[i]);
+	printf("\n");
+	*/
+	
+	//costruire il nonce:
+	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
+	}
 
 
 
