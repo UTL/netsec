@@ -162,6 +162,11 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 	memcpy(&aad[14], &mac_header->bssid, MAC_SIZE);
 	memcpy(&aad[20], &sc, 2);
 	
+	unsigned char * data = (unsigned char *)(packet+rh->it_len + sizeof(struct mgmt_header_t) + sizeof(char)*8);//char*8 è la lunghezza dell'iv
+
+	
+	int data_legth = pkthdr->caplen - 56;
+	
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
 	}
