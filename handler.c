@@ -90,28 +90,60 @@ void setSecAss(){
 	memcpy(mySecAss->apmac, myEap->apmac, MAC_SIZE);
 	memcpy(mySecAss->smac, myEap->smac, MAC_SIZE);
 	}
+	
+int macsPresent(unsigned char * smac, unsigned char * dmac){
+	return (eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac)) || (eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac));
+	}
+
+void createNew(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+	memcpy(myEap->counter, count, COUNTER_SIZE);
+	memcpy(myEap->apmac, dmac, MAC_SIZE);
+	memcpy(myEap->smac, smac, MAC_SIZE);
+	memcpy(myEap->anonce, nonce, NONCE_SIZE);
+	myEap->status = ONE;
+	}
+
+void resetHandshake(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+	createNew(nonce, count, smac, dmac);
+	}
+
+int increasedCounter(unsigned char c1[COUNTER_SIZE],unsigned char c2[COUNTER_SIZE]){
+	return eqCounter(u_char_increase(c1,COUNTER_SIZE),c2);
+	}
+
+/*
+ * 
+ * if(myEap->status == EMPTY && isNull(myEap->counter, COUNTER_SIZE)){ //sbagliato isnull, bisogna prima fare un memset a '\0'
+			
+			}
+ * 
+ */
 
 void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
-		if(myEap->status == EMPTY && isNull(myEap->counter, COUNTER_SIZE)){ //sbagliato isnull, bisogna prima fare un memset a '\0'
-			memcpy(myEap->counter, count, COUNTER_SIZE);
-			memcpy(myEap->apmac, dmac, MAC_SIZE);
-			memcpy(myEap->smac, smac, MAC_SIZE);
-			memcpy(myEap->anonce, nonce, NONCE_SIZE);
-			myEap->status = ONE;
+	if(macsPresent(smac, dmac)){
+		if(eqCounter(myEap->counter, count)){//secondo run eapol A <-- B
+			if(myEap->status == ONE && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)){
+				memcpy(myEap->snonce, nonce, NONCE_SIZE);
+				myEap->status = TWO;
+				}
 			}
-		else if(myEap->status == ONE && eqCounter(myEap->counter, count) && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)){
-			memcpy(myEap->snonce, nonce, NONCE_SIZE);
-			myEap->status = TWO;
-			}
-		else if(myEap->status == TWO && ((myEap->counter)[COUNTER_SIZE-1]+1 == count[COUNTER_SIZE-1]) && eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac) && eqNonce(nonce, myEap->anonce)){
-				memcpy(myEap->counter, count, COUNTER_SIZE);
+		else if(increasedCounter(myEap->counter, count)){//terzo run eapol A --> B
+			if(myEap->status == TWO && eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac) && eqNonce(nonce, myEap->anonce)){
+				//memcpy(myEap->counter, count, COUNTER_SIZE);
 				myEap->status = THR;
+				}
+			else if(myEap->status == THR && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)){//quarto run eapol A <-- B
+				myEap->status = DONE;
+				}
 			}
-		else if(myEap->status == THR && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac) && eqCounter(myEap->counter, count)){
-			myEap->status = DONE;
+		else
+			resetHandshake(nonce, count, smac, dmac); // nuovo handshake resetto
 			}
-		if(ready())
-			setSecAss();
+	else{//primo run eapol A --> B
+		createNew(nonce, count, smac, dmac);
+		}
+	if(ready())
+		setSecAss();
 	}
 	
 void setBeacon(char * newSid, unsigned char * newMac){

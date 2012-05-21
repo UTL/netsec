@@ -11,6 +11,24 @@ void printhex(unsigned char * toPrint, int length){
 	printf("\n");
 	}
 
+unsigned char * u_char_increase(unsigned char * in, int size){
+	unsigned char overflow = 1;
+	unsigned char * t = (unsigned char *)(malloc(size*sizeof(unsigned char)));
+	unsigned char * out = t;
+	
+	memcpy(t,in, size);
+	t = t + (size-1)*sizeof(unsigned char);
+	
+	while(size-- && overflow){
+		if(overflow)
+			(*t)++;
+		overflow = !(*t);
+		t--;
+		}
+
+	return out;// - (size-1);
+	}
+
 
 //da esadecimale a char
 char * extochar(char * in){

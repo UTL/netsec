@@ -39,4 +39,6 @@ int compare_test_vector(unsigned char * test, unsigned char * toTest, int length
 
 int isNull(unsigned char * str, int len);
 
+unsigned char * u_char_increase(unsigned char * in, int size); 
+
 #endif
