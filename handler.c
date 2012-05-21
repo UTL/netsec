@@ -12,6 +12,7 @@
 #define NONCE_SIZE 32
 #define COUNTER_SIZE 8
 #define MAC_SIZE 6
+#define AAD_SIZE 22
 
 //lo stato dell'handshake eap
 #define EMPTY 0 //non ancora partito
@@ -141,12 +142,25 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 	memcpy(&nonce[1], a2, MAC_SIZE);
 	memcpy(&nonce[7],&iv[0], 6);
 	
-	/*
-	int i;
-	for(i=0; i<13; i++)
-		printf("%02x ", nonce[i]);
-	printf("\n");
-	*/
+	unsigned char fc[2];
+	memcpy(&fc, &mac_header->fc,2);
+	
+	fc[0] &= 0b10001111;
+	fc[1] &= 0b11000111;
+	
+	fc[1] |= 0b01000000;
+	
+	unsigned char sc[2];
+	memcpy(sc, &mac_header->bssid + sizeof(unsigned char),2);
+	sc[0] &= 0b00001111;
+	sc[1] &= 0b00000000;
+	
+	unsigned char aad[AAD_SIZE];
+	memcpy(&aad[0], &fc[0],2);
+	memcpy(&aad[2], &mac_header->da, MAC_SIZE);
+	memcpy(&aad[8], &mac_header->sa, MAC_SIZE);
+	memcpy(&aad[14], &mac_header->bssid, MAC_SIZE);
+	memcpy(&aad[20], &sc, 2);
 	
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
