@@ -23,11 +23,11 @@ void print_check(char * tipo_test, int testOk);
 
 
 void print_check(char * tipo_test, int testOk){
-	printf("TEST VECTOR %s:",tipo_test);
+	/*printf("TEST VECTOR %s:",tipo_test);
 	if(testOk)
 		printf(" OK\n");
 	else
-		printf(" FALLITO\n");
+		printf(" FALLITO\n");*/
 	}
 
 

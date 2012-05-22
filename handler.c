@@ -171,32 +171,34 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 	}
 	
 void setBeacon(char * newSid, unsigned char * newMac){
-	if(!strcmp(mySniff->ssid, newSid) && !strlen(myBeac->ssid))
+	if(!strcmp(mySniff->ssid, newSid) && !strlen(myBeac->ssid)){
 		strcpy(myBeac->ssid, newSid);
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
+	}
 	}
 
 void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk){
 	
 	int i;
+	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
 	
-	printf("\"{\\\"aad\\\":\\\"0x");
+	printf("{\"aad\":\"0x");
 	for(i=0; i<AAD_SIZE;i++)
 		printf("%.2x",aad[i]);
 	
-	printf("\\\",\\\"nonce\\\":\\\"0x");
+	printf("\",\"nonce\":\"0x");
 	for(i=0; i<NONCE_SIZE;i++)
 		printf("%.2x",nonce[i]);
 	
-	printf("\\\",\\\"data\\\":\\\"0x");
+	printf("\",\"data\":\"0x");
 	for(i=0; i<data_length;i++)
 		printf("%.2x",data[i]);
 	
-	printf("\\\",\\\"tk\\\":\\\"0x");
+	printf("\",\"tk\":\"0x");
 	for(i=0; i<TK_SIZE;i++)
 		printf("%.2x",tk[i]);
 	
-	printf("\\\"}\"\n");
+	printf("\"}\n");
 	}
 
 void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){

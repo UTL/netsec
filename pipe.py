@@ -1,8 +1,15 @@
-import os 
+import os
+import json
 i,o,u = os.popen3("./out")
-while 1<2:
+while True:
 	out = o.readline()
 	if out != "":
-		print out
-#import json
+		try:
+			data = json.loads(out)
+			print "aad : " + data["aad"]
+			print "tk : " + data["tk"]
+		except:
+			print "eccezione"
+			#print out
+#
 #out = json.loads(cry)

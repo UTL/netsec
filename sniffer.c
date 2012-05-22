@@ -94,23 +94,24 @@ int main() {
 		// "pcap_open_live() failed: " << errbuf << endl; TODO
 		return 1;
 	}
-		
+	
+	//se non è uno stream wifi non mi interessa
  	if(pcap_datalink(descr)==DLT_IEEE802_11_RADIO)
-			printf("radiotape!");
-			
- 	fp = fopen("./output.txt", "w");
- 
-	// start packet processing loop, just like live capture
-	if (pcap_loop(descr, 0, packetHandler, NULL) < 0) {
-		printf("errore durante pcap_loop() : %s \n", pcap_geterr(descr));
+		{
+		fp = fopen("./output.txt", "w");
+	 
+		// start packet processing loop, just like live capture
+		if (pcap_loop(descr, 0, packetHandler, NULL) < 0) {
+			printf("errore durante pcap_loop() : %s \n", pcap_geterr(descr));
 
-		// TODO cout << "pcap_loop() failed: " << pcap_geterr(descr);
-		return 1;
+			// TODO cout << "pcap_loop() failed: " << pcap_geterr(descr);
+			return 1;
+		}
+		
+		fclose(fp);
+		
+		//printf("Fine cattura pacchetti\n");
 	}
-	
-	fclose(fp);
-	
-	printf("Fine cattura pacchetti\n");
 
 	//TODO cout << "capture finished" << endl;
  
