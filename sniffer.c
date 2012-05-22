@@ -19,6 +19,7 @@
 #define EAP_CONST "aaaa03000000888e"
 #define HA_CAP "/home/enrico/develop/netsec/wpa/cap/handshake_angie.cap"
 #define MY_CAP "./maistrim.cap"
+#define HOME_CAP "/home/enrico/develop/netsec/stream_home.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
 #define FC_DATA 0x08
@@ -162,6 +163,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		//WARNING controllare la lunghezza dei pacchetti prima di fare getcounter e getnonce
 		eap_mgmt(packet, rh, mac_header);
 		}
+		
 	if((mac_header->fc & 0xff) == FC_BEACON){
 		//lunghezza dello ssid
 		u_int8_t * ssidLength = (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t) + sizeof(u_char)*13);

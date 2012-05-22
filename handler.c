@@ -141,6 +141,11 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 				memcpy(anEap->snonce, nonce, NONCE_SIZE);
 				anEap->status = TWO;
 				}
+			else
+			{
+				printf("WARNING\n");
+			}
+			
 			}
 		else if(increasedCounter(anEap->counter, count)){//terzo run eapol A --> B
 			if(anEap->status == TWO && eqMac(anEap->apmac, dmac) && eqMac(anEap->smac, smac) && eqNonce(nonce, anEap->anonce)){
@@ -149,6 +154,10 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 				}
 			else if(anEap->status == THR && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){//quarto run eapol A <-- B
 				anEap->status = DONE;
+				}
+			else{
+				resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
+				printf("ELSE1\n");
 				}
 			}
 		else
