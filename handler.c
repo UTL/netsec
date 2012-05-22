@@ -8,7 +8,7 @@
 
 
 #define PWD_SIZE 63
-#define TK_SIZE 128
+#define TK_SIZE 16
 #define NONCE_SIZE 32
 #define COUNTER_SIZE 8
 #define MAC_SIZE 6
@@ -69,16 +69,14 @@ int eqNonce(unsigned char * n1, unsigned char * n2){
 	}
 
 void init(char * sid, char * pw){
-	myEap = malloc(sizeof(struct eap_st));
 	myBeac = malloc(sizeof(struct beacon_s));
 	mySniff = malloc(sizeof(struct sniffed_s));
-	mySecAss = malloc(sizeof(struct sec_assoc));
 	
 	strcpy(myBeac->ssid,"");
 	
 	strcpy(mySniff->ssid,"Sitecom");
 	strcpy(mySniff->pwd, "angelatramontano");
-	myEap->status = EMPTY;
+
 	}
 
 int ready(){
@@ -86,16 +84,32 @@ int ready(){
 	}
 
 void setSecAss(){
+	if(mySecAss == NULL)
+		mySecAss = malloc(sizeof(struct sec_assoc));
 	mySecAss->tk = calc_tk(mySniff->pwd, mySniff->ssid, myEap->apmac, myEap->smac, myEap->anonce, myEap->snonce);
 	memcpy(mySecAss->apmac, myEap->apmac, MAC_SIZE);
 	memcpy(mySecAss->smac, myEap->smac, MAC_SIZE);
 	}
 	
-int macsPresent(unsigned char * smac, unsigned char * dmac){
-	return (eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac)) || (eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac));
+	
+struct sec_assoc * getSecAss(unsigned char * smac, unsigned char * dmac){
+	if(mySecAss!=NULL)
+		if ((eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac)))
+			return mySecAss;
+	return NULL;
+	}
+	
+struct eap_st * macsPresent(unsigned char * smac, unsigned char * dmac){
+	if(myEap!=NULL)
+		if ((eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac)) || (eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)))
+			return myEap;
+	return NULL;
 	}
 
 void createNew(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+	if(myEap==NULL)
+		myEap = (struct eap_st *)(malloc(sizeof(struct eap_st)));
+	myEap->status = EMPTY;
 	memcpy(myEap->counter, count, COUNTER_SIZE);
 	memcpy(myEap->apmac, dmac, MAC_SIZE);
 	memcpy(myEap->smac, smac, MAC_SIZE);
@@ -103,7 +117,7 @@ void createNew(unsigned char * nonce, unsigned char * count, unsigned char * sma
 	myEap->status = ONE;
 	}
 
-void resetHandshake(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+void resetHandshake(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac, struct eap_st * toReset){
 	createNew(nonce, count, smac, dmac);
 	}
 
@@ -120,24 +134,25 @@ int increasedCounter(unsigned char c1[COUNTER_SIZE],unsigned char c2[COUNTER_SIZ
  */
 
 void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
-	if(macsPresent(smac, dmac)){
-		if(eqCounter(myEap->counter, count)){//secondo run eapol A <-- B
-			if(myEap->status == ONE && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)){
-				memcpy(myEap->snonce, nonce, NONCE_SIZE);
-				myEap->status = TWO;
+	struct eap_st * anEap= NULL;
+	if((anEap = macsPresent(smac, dmac))!= NULL){
+		if(eqCounter(anEap->counter, count)){//secondo run eapol A <-- B
+			if(anEap->status == ONE && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){
+				memcpy(anEap->snonce, nonce, NONCE_SIZE);
+				anEap->status = TWO;
 				}
 			}
-		else if(increasedCounter(myEap->counter, count)){//terzo run eapol A --> B
-			if(myEap->status == TWO && eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac) && eqNonce(nonce, myEap->anonce)){
-				//memcpy(myEap->counter, count, COUNTER_SIZE);
-				myEap->status = THR;
+		else if(increasedCounter(anEap->counter, count)){//terzo run eapol A --> B
+			if(anEap->status == TWO && eqMac(anEap->apmac, dmac) && eqMac(anEap->smac, smac) && eqNonce(nonce, anEap->anonce)){
+				//memcpy(anEap->counter, count, COUNTER_SIZE);
+				anEap->status = THR;
 				}
-			else if(myEap->status == THR && eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)){//quarto run eapol A <-- B
-				myEap->status = DONE;
+			else if(anEap->status == THR && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){//quarto run eapol A <-- B
+				anEap->status = DONE;
 				}
 			}
 		else
-			resetHandshake(nonce, count, smac, dmac); // nuovo handshake resetto
+			resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
 			}
 	else{//primo run eapol A --> B
 		createNew(nonce, count, smac, dmac);
@@ -150,6 +165,29 @@ void setBeacon(char * newSid, unsigned char * newMac){
 	if(!strcmp(mySniff->ssid, newSid) && !strlen(myBeac->ssid))
 		strcpy(myBeac->ssid, newSid);
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
+	}
+
+void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk){
+	
+	int i;
+	
+	printf("\"{\\\"aad\\\":\\\"0x");
+	for(i=0; i<AAD_SIZE;i++)
+		printf("%.2x",aad[i]);
+	
+	printf("\\\",\\\"nonce\\\":\\\"0x");
+	for(i=0; i<NONCE_SIZE;i++)
+		printf("%.2x",nonce[i]);
+	
+	printf("\\\",\\\"data\\\":\\\"0x");
+	for(i=0; i<data_length;i++)
+		printf("%.2x",data[i]);
+	
+	printf("\\\",\\\"tk\\\":\\\"0x");
+	for(i=0; i<TK_SIZE;i++)
+		printf("%.2x",tk[i]);
+	
+	printf("\\\"}\"\n");
 	}
 
 void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
@@ -195,9 +233,13 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 	memcpy(&aad[20], &sc, 2);
 	
 	unsigned char * data = (unsigned char *)(packet+rh->it_len + sizeof(struct mgmt_header_t) + sizeof(char)*8);//char*8 è la lunghezza dell'iv
-
 	
-	int data_legth = pkthdr->caplen - 56;
+	int data_length = pkthdr->caplen - 56;
+	
+	struct sec_assoc * secAss;
+	
+	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL)
+		decrypt(aad, nonce, data, data_length, secAss->tk);
 	
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))

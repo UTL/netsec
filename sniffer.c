@@ -132,57 +132,14 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 
 	setEap(getNonce(packet), getCounter(packet), mac_header->sa, mac_header->da);
 	/*int i;
-		//nulla di inizializzato, copio primo nonce e i 2 mac, WARNING CONTROLLARE I MAC!!
-		if(isNull(chall.anonce, NONCE_SIZE)){
-			memcpy(chall.counter, getCounter(packet),COUNTER_SIZE);	
-			memcpy(chall.anonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
-			
-			//WARNING MAC NON CONTROLLATI!!!
-			memcpy(chall.dmac, mac_header->da, MAC_SIZE);
-			memcpy(chall.smac, mac_header->sa, MAC_SIZE);
-			
-			printf("\nSperiamo anonce: \n");
-			for(i=0; i<NONCE_SIZE;i++)
-				printf("%.2x:", chall.anonce[i]);
-			printf("\n");
-			}	
-		//primo nonce inizializzato, copio il secondo
-		else if(!u_char_differ(chall.counter, getCounter(packet) , COUNTER_SIZE)){
-			memcpy(chall.snonce, getNonce(packet) ,NONCE_SIZE); //+ member_size(eapol,it_type) + member_size(eapol,it_len) + member_size(eapol,other));
-			
-			printf("\nSperiamo snonce: \n");
+
 			for(i=0; i<NONCE_SIZE;i++)
 				printf("%.2x:", chall.snonce[i]);
 			printf("\n");
-			
-			unsigned char *tk = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce, chall.snonce);
-			
-			//u_char * tk   = calc_tk(chall.pwd, chall.ssid, chall.dmac, chall.smac, chall.anonce,chall.snonce);
-			* 
-			* 
-			* 
-		}
+
 		*/
 	}
 
-/*
-int ssidNeeded(struct mgmt_header_t *mac_header){
-	//se ho i nonce, ma non ho il ssid
-	//if(chall)
-	mac_header->sa;
-	if(!isNull(chall.anonce, NONCE_SIZE) && !isNull(chall.snonce, NONCE_SIZE))
-		if(!(u_char_differ(mac_header->sa, chall.dmac, MAC_SIZE)) || !(u_char_differ(mac_header->sa, chall.smac, MAC_SIZE)))
-			return 1;
-	return 0;
-	}
-	* */
-/*
-void getSsid(struct mgmt_header_t *mac_header){
-	
-	if(!isNull(chall.smac, MAC_SIZE) && (!u_char_differ( mac_header->sa, BROADCAST, MAC_SIZE) || !u_char_differ(mac_header->sa, BROADCAST, MAC_SIZE)))
-		if(!u_char_differ(mac_header->da, BROADCAST, MAC_SIZE))
-	}
-*/
 
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
@@ -224,32 +181,5 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet));
 	}
 	n_pacc++;
-	
-	//if(mac_header->da[0] == (u_int8_t) 255 && mac_header->da[1] == (u_int8_t) 255 &&  mac_header->da[2] == (u_int8_t) 255 &&  mac_header->da[3] == (u_int8_t) 255 &&  mac_header->da[4] == (u_int8_t) 255 &&  mac_header->da[5]== (u_int8_t) 255)
-
-	/*fprintf(fp, "MAC da: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->da[0], mac_header->da[1], mac_header->da[2], mac_header->da[3], mac_header->da[4], mac_header->da[5]);
-	fprintf(fp, "MAC sa  : %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->sa[0], mac_header->sa[1], mac_header->sa[2], mac_header->sa[3], mac_header->sa[4], mac_header->sa[5]);
-	fprintf(fp, "MAC bssid  : %.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_header->bssid[0], mac_header->bssid[1], mac_header->bssid[2], mac_header->bssid[3], mac_header->bssid[4], mac_header->bssid[5]);
-	*/
-	
-	//ethernetHeader = (struct ether_header*)packet;
-	
-	//fprintf(fp, "pacchetto %d\n",ntohs(ethernetHeader->ether_type));
-	
-	//if (ntohs(ethernetHeader->ether_type) == ETHERTYPE_IP) {
-		/*//printf("pacchetto ip\n");
-		ipHeader = (struct ip*)(packet + sizeof(struct ether_header));
-		inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIp, INET_ADDRSTRLEN);
-		inet_ntop(AF_INET, &(ipHeader->ip_dst), destIp, INET_ADDRSTRLEN);
- 
-		if (ipHeader->ip_p == IPPROTO_TCP) {
-			tcpHeader = (struct tcphdr*)(packet + sizeof(struct ether_header) + sizeof(struct ip));
-			sourcePort = ntohs(tcpHeader->source);
-			destPort = ntohs(tcpHeader->dest);
-			data = (u_char*)(packet + sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct tcphdr));
-			dataLength = pkthdr->len - (sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct tcphdr));
-
-		}*/
-	//}
 
 }
