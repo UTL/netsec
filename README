@@ -1,0 +1,13 @@
+Requisiti:
+Ubuntu 10.10 x86_64 o superiore
+scheda wireless che usa drivers iwlagn
+
+Pacchetti necessari:
+libssl-dev
+libpcap0.8-dev
+build-essentials
+python
+aircrack-ng
+
+Utilizzo:
+./run_python.sh
