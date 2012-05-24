@@ -10,6 +10,9 @@ python
 aircrack-ng
 gcc 4.4
 
+sudo apt-get install binutils build-essential libc6-dev gcc-4.4 libpcap0.8-dev libssl-dev
+
+
 NB col gcc 4.6 non compila
 
 Utilizzo:
