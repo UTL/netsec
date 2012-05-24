@@ -8,6 +8,10 @@ libpcap0.8-dev
 build-essentials
 python
 aircrack-ng
+gcc 4.4
+
+NB col gcc 4.6 non compila
 
 Utilizzo:
+da bash lanciare l'eseguibile
 ./run_python.sh
