@@ -9,10 +9,11 @@
 
 #define PWD_SIZE 63
 #define TK_SIZE 16
-#define NONCE_SIZE 32
+#define EAP_NONCE_SIZE 32
 #define COUNTER_SIZE 8
 #define MAC_SIZE 6
 #define AAD_SIZE 22
+#define CCMP_NONCE_SIZE 13
 
 //lo stato dell'handshake eap
 #define EMPTY 0 //non ancora partito
@@ -30,8 +31,8 @@ struct beacon_s{
 
 //parametri eap
 struct eap_st{
-	unsigned char		anonce[NONCE_SIZE];
-	unsigned char		snonce[NONCE_SIZE];
+	unsigned char		anonce[EAP_NONCE_SIZE];
+	unsigned char		snonce[EAP_NONCE_SIZE];
 	unsigned char		apmac[MAC_SIZE];
 	unsigned char		smac[MAC_SIZE];
 	unsigned char		counter[COUNTER_SIZE];
@@ -65,7 +66,7 @@ int eqMac(unsigned char * mac1, unsigned char * mac2){
 	}
 	
 int eqNonce(unsigned char * n1, unsigned char * n2){
-	 return !u_char_differ(n1, n2,NONCE_SIZE);
+	 return !u_char_differ(n1, n2,EAP_NONCE_SIZE);
 	}
 
 void init(char * sid, char * pw){
@@ -113,7 +114,7 @@ void createNew(unsigned char * nonce, unsigned char * count, unsigned char * sma
 	memcpy(myEap->counter, count, COUNTER_SIZE);
 	memcpy(myEap->apmac, dmac, MAC_SIZE);
 	memcpy(myEap->smac, smac, MAC_SIZE);
-	memcpy(myEap->anonce, nonce, NONCE_SIZE);
+	memcpy(myEap->anonce, nonce, EAP_NONCE_SIZE);
 	myEap->status = ONE;
 	}
 
@@ -138,7 +139,7 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 	if((anEap = macsPresent(smac, dmac))!= NULL){
 		if(eqCounter(anEap->counter, count)){//secondo run eapol A <-- B
 			if(anEap->status == ONE && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){
-				memcpy(anEap->snonce, nonce, NONCE_SIZE);
+				memcpy(anEap->snonce, nonce, EAP_NONCE_SIZE);
 				anEap->status = TWO;
 				}
 			else
@@ -187,7 +188,7 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 		printf("%.2x",aad[i]);
 	
 	printf("\",\"nonce\":\"0x");
-	for(i=0; i<NONCE_SIZE;i++)
+	for(i=0; i<CCMP_NONCE_SIZE;i++)
 		printf("%.2x",nonce[i]);
 	
 	printf("\",\"data\":\"0x");

@@ -49,7 +49,7 @@ struct in_eapol{
 
 struct eapol{
 	struct in_eapol params;
-	u_char nonce[NONCE_SIZE];
+	u_char nonce[EAP_NONCE_SIZE];
 	}__attribute__ (( packed ));
 
 
@@ -74,8 +74,8 @@ int main() {
 	
 	EAP = extochar(EAP_CONST);
 	
-	//memset (chall.anonce,'\0',NONCE_SIZE);
-	//memset (chall.snonce,'\0',NONCE_SIZE);
+	//memset (chall.anonce,'\0',EAP_NONCE_SIZE);
+	//memset (chall.snonce,'\0',EAP_NONCE_SIZE);
 	
 	init("Sitecom", "angelatramontano");
 	
@@ -135,7 +135,7 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 	setEap(getNonce(packet), getCounter(packet), mac_header->sa, mac_header->da);
 	/*int i;
 
-			for(i=0; i<NONCE_SIZE;i++)
+			for(i=0; i<EAP_NONCE_SIZE;i++)
 				printf("%.2x:", chall.snonce[i]);
 			printf("\n");
 

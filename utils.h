@@ -3,7 +3,7 @@
 
 #define PWD_SIZE 63
 #define TK_SIZE 16
-#define NONCE_SIZE 32
+#define EAP_NONCE_SIZE 32
 #define COUNTER_SIZE 8
 #define MAC_SIZE 6
 
