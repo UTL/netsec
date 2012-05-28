@@ -29,36 +29,15 @@ unsigned char * u_char_increase(unsigned char * in, int size){
 	return out;// - (size-1);
 	}
 
-
-//da esadecimale a char
-char * extochar(char * in){
-	int inLen = strlen(in);
-	int i,k;
-	int resInt[inLen/2];
-	char * resChar=malloc(inLen/2);
-
-	k=0;
-	for(i=0; i<inLen/2; i=i++){
-		resInt[k]=chartoint(in[i*2])<<4;
-		resInt[k]+=chartoint(in[(i*2)+1]);
-		k++;
-	}
-
-	for(k=0; k<inLen/2;k++){
-		resChar[k]=(char)resInt[k];
-	}
-	return resChar;
-}
-
-// traduce da carattere a intero '0' -> 0 'a'->10
-int chartoint(char car){
-	int intero = 0;
-	intero = car - '0';
-	if(intero < 10 && intero > -1)
-		return intero;
-	else
-		return car - 'a' + 10; //caratteri mappati diversamente
-
+char * extochar(char* string)
+{
+    unsigned char * out = malloc(sizeof(unsigned char)*strlen(string)/2);
+    int i;
+    for (i = 0; i < strlen(string)/2; i++)
+    {
+        sscanf(&string[2*i], "%02x", (unsigned int *)(&out[i]));
+    }
+    return out;
 }
 
 int u_char_differ(unsigned char *a, unsigned char *b, int size) {
