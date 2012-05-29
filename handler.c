@@ -172,17 +172,21 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 			}
 			else if(anEap->status == THR && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){//quarto run eapol A <-- B
 				anEap->status = DONE;
+				printf("{\"command\":\"1\",\"msg\":\"Catturato un handshake completo tra l'AP target e un host\"}\n");
 			}
 			else{
 				resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
-				printf("ELSE1\n");
+				printf("{\"command\":\"1\",\"msg\":\"Reset dell'handshake eap\"}\n");
 			}
 		}
-		else
+		else{
 			resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
+			printf("{\"command\":\"1\",\"msg\":\"Reset dell'handshake eap\"}\n");
+		}
 	}
 	else{//primo run eapol A --> B
 		anEap = createNew(nonce, count, smac, dmac);
+		printf("{\"command\":\"1\",\"msg\":\"Nuovo handshake eap intercettato\"}\n");
 	}
 	if(ready(anEap))
 		setSecAss(anEap);
@@ -196,6 +200,7 @@ void setBeacon(char * newSid, unsigned char * newMac){
 		strcpy(myBeac->ssid, newSid);
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
 		myBeac->status = DONE;
+		printf("{\"command\":\"1\",\"msg\":\"Catturato un beacon dell'AP target\"}\n");
 	}
 }
 
@@ -208,7 +213,7 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	for(i=0; i<AAD_SIZE;i++)
 		printf("%.2x",aad[i]);
 
-	printf("\",\"nonce\":\"");
+	printf("\",\"command\":\"2\",\"nonce\":\"");
 	for(i=0; i<CCMP_NONCE_SIZE;i++)
 		printf("%.2x",nonce[i]);
 

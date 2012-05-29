@@ -55,18 +55,29 @@ def signal_handler(signal, frame):
 	print 'Chiusura programma in corso'
         sys.exit(0)
 
+
 signal.signal(signal.SIGINT, signal_handler)
 i,o,u = os.popen3("./out")
+print "INIZIO PROGRAMMA"
 while True:
 	out = o.readline()
 	if out != "":
 		try:
 			data = json.loads(out)
-			decripta(data)
+			#1 = messaggio
+			#2 = dati da decriptare
+			if data["command"] == "2":
+				decripta(data)
+			elif data["command"] == "1":
+				print "-----------MESSAGGIO----------"
+				print data["msg"]
+				print ""
 		except ValueError:
 			print "Dati non Json"
 			print out
 			#print out
+
+
 #
 #out = json.loads(cry)
 

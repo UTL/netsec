@@ -77,7 +77,7 @@ int main() {
 	//memset (chall.anonce,'\0',EAP_NONCE_SIZE);
 	//memset (chall.snonce,'\0',EAP_NONCE_SIZE);
 	
-	init("Sitecom", "angelatramontano");
+	init("WiFi", "23sorellematte");
 	
 	//strcpy(chall.ssid,"Sitecom");
 	//strcpy(chall.pwd, "angelatramontano");
@@ -88,18 +88,21 @@ int main() {
 	
 
 	// open capture file for offline processing
-	descr = pcap_open_offline(HA_CAP, errbuf);
+	//descr = pcap_open_offline(HA_CAP, errbuf);
+	descr = pcap_open_live("mon0",65535,1,2000,errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
 
 		return 1;
 	}
+	else printf("open live!\n");
 	
 	//se non è uno stream wifi non mi interessa
  	if(pcap_datalink(descr)==DLT_IEEE802_11_RADIO)
 		{
 		fp = fopen("./output.txt", "w");
-	 
+		printf("{\"command\":\"1\",\"msg\":\"Radiotape rilevato, inizio sniffing\"}\n");
+
 		// start packet processing loop, just like live capture
 		if (pcap_loop(descr, 0, packetHandler, NULL) < 0) {
 			printf("errore durante pcap_loop() : %s \n", pcap_geterr(descr));
@@ -112,6 +115,8 @@ int main() {
 		
 		//printf("Fine cattura pacchetti\n");
 	}
+ 	else
+		printf("{\"command\":\"1\",\"msg\":\"Nessun radiotape rilevato\"}\n");
 
 	//TODO cout << "capture finished" << endl;
  
@@ -146,7 +151,9 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
 
-	
+	printf("{\"command\":\"1\",\"msg\":\"Pacchetto\"}\n");
+
+
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
 
 
@@ -178,11 +185,14 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		str_ssid[*ssidLength]= '\0';
 		
 		setBeacon(str_ssid, mac_header->sa);
+
 		//printf("ssid %s\n",str_ssid);
 		}
 	else if((mac_header->fc & 0xff) == FC_DATA){
 		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet));
 	}
+
+
 	n_pacc++;
 
 }
