@@ -172,7 +172,22 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 			}
 			else if(anEap->status == THR && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){//quarto run eapol A <-- B
 				anEap->status = DONE;
-				printf("{\"command\":\"1\",\"msg\":\"Catturato un handshake completo tra l'AP target e un host\"}\n");
+				printf("{\"command\":\"1\",\"msg\":\"Catturato un handshake completo tra l'AP target e un host");
+						int i;
+				printf(" mac1: ");
+					for(i=0; i<MAC_SIZE;i++)
+				printf("%.2x",anEap->smac[i]);
+				printf(" mac2: ");
+					for(i=0; i<MAC_SIZE;i++)
+				printf("%.2x",anEap->apmac[i]);
+				printf(" anonce: ");
+					for(i=0; i<EAP_NONCE_SIZE;i++)
+				printf("%.2x",anEap->anonce[i]);
+				printf(" mac1: ");
+					for(i=0; i<EAP_NONCE_SIZE;i++)
+				printf("%.2x",anEap->snonce[i]);
+				
+				printf("\"}\n");
 			}
 			else{
 				resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
@@ -201,6 +216,7 @@ void setBeacon(char * newSid, unsigned char * newMac){
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
 		myBeac->status = DONE;
 		printf("{\"command\":\"1\",\"msg\":\"Catturato un beacon dell'AP target\"}\n");
+
 	}
 }
 
@@ -272,7 +288,9 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 
 	unsigned char * data = (unsigned char *)(packet+rh->it_len + sizeof(struct mgmt_header_t) + sizeof(char)*8);//char*8 è la lunghezza dell'iv
 
-	int data_length = pkthdr->caplen - 56;
+	//fix brutale 56
+	//32 è la dimensione dello struct mgmt_header_t
+	int data_length = pkthdr->caplen - rh->it_len - 32;
 
 	struct sec_assoc * secAss;
 

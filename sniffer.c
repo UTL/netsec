@@ -77,7 +77,7 @@ int main() {
 	//memset (chall.anonce,'\0',EAP_NONCE_SIZE);
 	//memset (chall.snonce,'\0',EAP_NONCE_SIZE);
 	
-	init("WiFi", "23sorellematte");
+	init("WiFi", "LAMIAPW");
 	
 	//strcpy(chall.ssid,"Sitecom");
 	//strcpy(chall.pwd, "angelatramontano");
@@ -88,7 +88,7 @@ int main() {
 	
 
 	// open capture file for offline processing
-	//descr = pcap_open_offline(HA_CAP, errbuf);
+	//descr = pcap_open_offline("./wpa/cap/miocap3.cap", errbuf);
 	descr = pcap_open_live("mon0",65535,1,2000,errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
