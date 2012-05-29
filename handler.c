@@ -50,7 +50,7 @@ struct sniffed_s{
 struct sec_assoc{
 	unsigned char		apmac[MAC_SIZE];
 	unsigned char		smac[MAC_SIZE];
-	unsigned char * tk;
+	unsigned char * 	tk;
 };
 
 //struct eap_st *myEap = NULL;
@@ -60,32 +60,32 @@ struct sec_assoc *mySecAss;
 struct eap_st *myEap;
 
 int eqCounter(unsigned char * count1, unsigned char * count2){
-	 return !u_char_differ(count1, count2,COUNTER_SIZE);
-	}
+	return !u_char_differ(count1, count2,COUNTER_SIZE);
+}
 
 int eqMac(unsigned char * mac1, unsigned char * mac2){
 	return !u_char_differ(mac1, mac2, MAC_SIZE);
-	}
-	
+}
+
 int eqNonce(unsigned char * n1, unsigned char * n2){
-	 return !u_char_differ(n1, n2,EAP_NONCE_SIZE);
-	}
+	return !u_char_differ(n1, n2,EAP_NONCE_SIZE);
+}
 
 void init(char * sid, char * pw){
 	myBeac = malloc(sizeof(struct beacon_s));
 	target = malloc(sizeof(struct sniffed_s));
 	myBeac->status = EMPTY;
 	strcpy(myBeac->ssid,"");
-	
-	strcpy(target->ssid,"Sitecom");
-	strcpy(target->pwd, "angelatramontano");
 
-	}
+	strcpy(target->ssid,sid);
+	strcpy(target->pwd, pw);
+
+}
 
 int ready(struct eap_st * anEap){
 	return myBeac->status != EMPTY && anEap->status==DONE &&  eqMac(myBeac->apmac, anEap->smac);
 	//se abbiamo almeno un beacon, un handshake eap e gli apmac coincidono possiamo cominciare a decriptare
-	}
+}
 
 void setSecAss(struct eap_st * anEap){
 	if(mySecAss == NULL)
@@ -93,9 +93,9 @@ void setSecAss(struct eap_st * anEap){
 	mySecAss->tk = calc_tk(target->pwd, target->ssid, anEap->apmac, anEap->smac, anEap->anonce, anEap->snonce);
 	memcpy(mySecAss->apmac, anEap->apmac, MAC_SIZE);
 	memcpy(mySecAss->smac, anEap->smac, MAC_SIZE);
-	}
-	
-	
+}
+
+
 struct sec_assoc * getSecAss(unsigned char * smac, unsigned char * dmac){
 	if(mySecAss!=NULL)
 		if ((eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac)))
@@ -244,64 +244,36 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 	nonce[0]= 0x00;
 	memcpy(&nonce[1], a2, MAC_SIZE);
 	memcpy(&nonce[7],&iv[0], 6);
-	
+
 	unsigned char fc[2];
 	memcpy(&fc, &mac_header->fc,2);
-	
+
 	fc[0] &= 0b10001111;
 	fc[1] &= 0b11000111;
-	
+
 	fc[1] |= 0b01000000;
-	
+
 	unsigned char sc[2];
 	memcpy(sc, &mac_header->bssid + sizeof(unsigned char),2);
 	sc[0] &= 0b00001111;
 	sc[1] &= 0b00000000;
-	
+
 	unsigned char aad[AAD_SIZE];
 	memcpy(&aad[0], &fc[0],2);
 	memcpy(&aad[2], &mac_header->da, MAC_SIZE);
 	memcpy(&aad[8], &mac_header->sa, MAC_SIZE);
 	memcpy(&aad[14], &mac_header->bssid, MAC_SIZE);
 	memcpy(&aad[20], &sc, 2);
-	
+
 	unsigned char * data = (unsigned char *)(packet+rh->it_len + sizeof(struct mgmt_header_t) + sizeof(char)*8);//char*8 è la lunghezza dell'iv
-	
+
 	int data_length = pkthdr->caplen - 56;
-	
+
 	struct sec_assoc * secAss;
-	
+
 	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL)
 		decrypt(aad, nonce, data, data_length, secAss->tk);
-	
+
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

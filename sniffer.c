@@ -91,7 +91,7 @@ int main() {
 	descr = pcap_open_offline(HA_CAP, errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
-		// "pcap_open_live() failed: " << errbuf << endl; TODO
+
 		return 1;
 	}
 	
