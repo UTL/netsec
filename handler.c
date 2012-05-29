@@ -22,7 +22,6 @@
 #define THR 3
 #define DONE 4
 
-
 //parametri beacon
 struct beacon_s{
 	char				ssid[PWD_SIZE+1];
@@ -37,6 +36,7 @@ struct eap_st{
 	unsigned char		smac[MAC_SIZE];
 	unsigned char		counter[COUNTER_SIZE];
 	int 				status;
+	struct eap_st *		next;
 };
 
 //parametri iniziali
@@ -52,10 +52,11 @@ struct sec_assoc{
 	unsigned char * tk;
 };
 
-struct eap_st *myEap = NULL;
+//struct eap_st *myEap = NULL;
 struct beacon_s *myBeac;
 struct sniffed_s *mySniff;
 struct sec_assoc *mySecAss;
+struct eap_st *myEap;
 
 int eqCounter(unsigned char * count1, unsigned char * count2){
 	 return !u_char_differ(count1, count2,COUNTER_SIZE);
@@ -80,16 +81,20 @@ void init(char * sid, char * pw){
 
 	}
 
-int ready(){
-	return strlen(myBeac->ssid) && myEap->status==DONE &&  eqMac(myBeac->apmac, myEap->smac);//se abbiamo almeno un beacon, un handshake eap e gli apmac coincidono possiamo cominciare a decriptare
+int ready(struct eap_st * anEap){
+	int i = 1;
+	i = i && strlen(myBeac->ssid);
+	i = i && anEap->status==DONE;
+	i = i &&  eqMac(myBeac->apmac, anEap->smac);
+	return  i; //se abbiamo almeno un beacon, un handshake eap e gli apmac coincidono possiamo cominciare a decriptare
 	}
 
-void setSecAss(){
+void setSecAss(struct eap_st * anEap){
 	if(mySecAss == NULL)
 		mySecAss = malloc(sizeof(struct sec_assoc));
-	mySecAss->tk = calc_tk(mySniff->pwd, mySniff->ssid, myEap->apmac, myEap->smac, myEap->anonce, myEap->snonce);
-	memcpy(mySecAss->apmac, myEap->apmac, MAC_SIZE);
-	memcpy(mySecAss->smac, myEap->smac, MAC_SIZE);
+	mySecAss->tk = calc_tk(mySniff->pwd, mySniff->ssid, anEap->apmac, anEap->smac, anEap->anonce, anEap->snonce);
+	memcpy(mySecAss->apmac, anEap->apmac, MAC_SIZE);
+	memcpy(mySecAss->smac, anEap->smac, MAC_SIZE);
 	}
 	
 	
@@ -98,41 +103,55 @@ struct sec_assoc * getSecAss(unsigned char * smac, unsigned char * dmac){
 		if ((eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac)))
 			return mySecAss;
 	return NULL;
-	}
-	
+}
+
 struct eap_st * macsPresent(unsigned char * smac, unsigned char * dmac){
-	if(myEap!=NULL)
+	struct eap_st * anEap = myEap;
+	while(anEap!=NULL){
 		if ((eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac)) || (eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)))
 			return myEap;
+		anEap = anEap->next;
+	}
 	return NULL;
+}
+
+void setEapParams(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac, struct eap_st * toSet){
+	toSet->status = EMPTY;
+	memcpy(toSet->counter, count, COUNTER_SIZE);
+	memcpy(toSet->apmac, dmac, MAC_SIZE);
+	memcpy(toSet->smac, smac, MAC_SIZE);
+	memcpy(toSet->anonce, nonce, EAP_NONCE_SIZE);
+	toSet->status = ONE;
+
+}
+
+struct eap_st * createNew(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+	struct eap_st * anEap;
+	//se il primo non e' vuoto scorro fino a trovarne uno
+	if(myEap != NULL){
+		struct eap_st * anEap = myEap;
+		while(anEap->next != NULL)
+			anEap = anEap->next;
+		anEap->next = (struct eap_st *)(malloc(sizeof(struct eap_st)));
+		anEap = anEap->next;
+	}
+	else{ //se e' vuoto il primo lo alloco
+		myEap = (struct eap_st *)(malloc(sizeof(struct eap_st)));
+		anEap = myEap;
 	}
 
-void createNew(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
-	if(myEap==NULL)
-		myEap = (struct eap_st *)(malloc(sizeof(struct eap_st)));
-	myEap->status = EMPTY;
-	memcpy(myEap->counter, count, COUNTER_SIZE);
-	memcpy(myEap->apmac, dmac, MAC_SIZE);
-	memcpy(myEap->smac, smac, MAC_SIZE);
-	memcpy(myEap->anonce, nonce, EAP_NONCE_SIZE);
-	myEap->status = ONE;
-	}
+	setEapParams(nonce, count, smac, dmac, anEap);
+	return anEap;
+}
 
 void resetHandshake(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac, struct eap_st * toReset){
-	createNew(nonce, count, smac, dmac);
-	}
+	setEapParams(nonce, count, smac, dmac, toReset);
+}
 
 int increasedCounter(unsigned char c1[COUNTER_SIZE],unsigned char c2[COUNTER_SIZE]){
 	return eqCounter(u_char_increase(c1,COUNTER_SIZE),c2);
-	}
+}
 
-/*
- * 
- * if(myEap->status == EMPTY && isNull(myEap->counter, COUNTER_SIZE)){ //sbagliato isnull, bisogna prima fare un memset a '\0'
-			
-			}
- * 
- */
 
 void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
 	struct eap_st * anEap= NULL;
@@ -165,12 +184,13 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 			resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
 			}
 	else{//primo run eapol A --> B
-		createNew(nonce, count, smac, dmac);
+		anEap = createNew(nonce, count, smac, dmac);
 		}
-	if(ready())
-		setSecAss();
+	if(ready(anEap))
+		setSecAss(anEap);
 	}
 	
+//gestisco solo un Access Point
 void setBeacon(char * newSid, unsigned char * newMac){
 	if(!strcmp(mySniff->ssid, newSid) && !strlen(myBeac->ssid)){
 		strcpy(myBeac->ssid, newSid);
