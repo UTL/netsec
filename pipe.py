@@ -1,4 +1,4 @@
-import json, base64, binascii, os, sys
+import json, base64, binascii, os, sys, signal
 sys.path.append('cryptopy')
 
 from crypto.cipher.ccm import CCM
@@ -6,6 +6,7 @@ from crypto.cipher.aes import AES
 
 #funzione di libreria presa "com'e'"
 FILTER=''.join([(len(repr(chr(x)))==3) and chr(x) or '.' for x in range(256)])
+
 
 def dump(src, length=8):
 	N=0; result=''
@@ -48,6 +49,13 @@ def binify(inp):
 	return base64.b16decode(str(inp).upper())
 
 
+
+def signal_handler(signal, frame):
+        print 'Rilevato Ctrl+C'
+	print 'Chiusura programma in corso'
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 i,o,u = os.popen3("./out")
 while True:
 	out = o.readline()
