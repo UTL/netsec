@@ -58,7 +58,13 @@ def signal_handler(signal, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 i,o,u = os.popen3("./out")
-print "INIZIO PROGRAMMA"
+print ""
+print ""
+print "Progetto Network Security"
+print "Rizzardi Enrico"
+print ""
+print "Ricordarsi di verificare ssid e pw"
+print 
 while True:
 	out = o.readline()
 	if out != "":
