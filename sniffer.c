@@ -188,7 +188,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 
 		//printf("ssid %s\n",str_ssid);
 		}
-	else if((mac_header->fc & 0xff) == FC_DATA && u_char_differ(mac_header->bssid, BROADCAST, MAC_SIZE)){
+	else if((mac_header->fc & 0xff) == FC_DATA){
 		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet));
 	}
 
