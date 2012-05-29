@@ -183,19 +183,19 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	int i;
 	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
 	
-	printf("{\"aad\":\"0x");
+	printf("{\"aad\":\"");
 	for(i=0; i<AAD_SIZE;i++)
 		printf("%.2x",aad[i]);
 	
-	printf("\",\"nonce\":\"0x");
+	printf("\",\"nonce\":\"");
 	for(i=0; i<CCMP_NONCE_SIZE;i++)
 		printf("%.2x",nonce[i]);
 	
-	printf("\",\"data\":\"0x");
+	printf("\",\"data\":\"");
 	for(i=0; i<data_length;i++)
 		printf("%.2x",data[i]);
 	
-	printf("\",\"tk\":\"0x");
+	printf("\",\"tk\":\"");
 	for(i=0; i<TK_SIZE;i++)
 		printf("%.2x",tk[i]);
 	
