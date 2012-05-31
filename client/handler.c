@@ -60,7 +60,8 @@ struct sniffed_s *target;
 struct sec_assoc *mySecAss;
 struct eap_st *myEap;
 
-char stringa[70000];
+char stringa[100000];
+
 
 int eqCounter(unsigned char * count1, unsigned char * count2){
 	return !u_char_differ(count1, count2,COUNTER_SIZE);
@@ -94,34 +95,42 @@ void setSecAss(struct eap_st * anEap){
 	struct sec_assoc * aSecAss;
 
 	if(mySecAss != NULL){
-		struct sec_assoc * aSecAss = mySecAss;
+		aSecAss = mySecAss;
 		while(aSecAss->next != NULL && !eqMacOr(anEap->apmac, aSecAss->apmac, anEap->smac, aSecAss->smac))
 			aSecAss = aSecAss->next;
 		//se è la prima sa tra i 2 dispositivi ne creiamo uno nuovo
 		if(!eqMacOr(anEap->apmac, aSecAss->apmac, anEap->smac, aSecAss->smac)){
 			aSecAss->next = (struct sec_assoc *)(malloc(sizeof(struct sec_assoc)));
+			if(aSecAss->next == NULL)
+				printf("errore malloc\n");
+			aSecAss->next->next = NULL;
 			aSecAss = aSecAss->next;
 		}
 		//altrimenti aggiorniamo quella esistente
 	}
 	else{
 		mySecAss = malloc(sizeof(struct sec_assoc));
+		if(aSecAss->next == NULL)
+			printf("errore malloc\n");
+		mySecAss->next = NULL;
 		aSecAss = mySecAss;
 	}
 
-	mySecAss->tk = calc_tk(target->pwd, target->ssid, anEap->apmac, anEap->smac, anEap->anonce, anEap->snonce);
-	memcpy(mySecAss->apmac, anEap->apmac, MAC_SIZE);
-	memcpy(mySecAss->smac, anEap->smac, MAC_SIZE);
+	aSecAss->tk = calc_tk(target->pwd, target->ssid, anEap->apmac, anEap->smac, anEap->anonce, anEap->snonce);
+	memcpy(aSecAss->apmac, anEap->apmac, MAC_SIZE);
+	memcpy(aSecAss->smac, anEap->smac, MAC_SIZE);
 }
+
+
 
 
 struct sec_assoc * getSecAss(unsigned char * smac, unsigned char * dmac){
 	struct sec_assoc * aSecAss = mySecAss;
 	if(aSecAss!=NULL){
-		while(aSecAss->next != NULL && !eqMacOr(smac, aSecAss->apmac, dmac, aSecAss->smac))
+		while(aSecAss->next != NULL && !eqMacOr(aSecAss->apmac,dmac , aSecAss->smac,smac ))
 					aSecAss = aSecAss->next;
-		if (eqMacOr(mySecAss->apmac, dmac,mySecAss->apmac, dmac))//(eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac))
-			return mySecAss;
+		if (eqMacOr(aSecAss->apmac, dmac,aSecAss->apmac, dmac))//(eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac))
+			return aSecAss;
 	}
 	return NULL;
 }
@@ -156,17 +165,26 @@ struct eap_st * createNew(unsigned char * nonce, unsigned char * count, unsigned
 	struct eap_st * anEap;
 	//se il primo non e' vuoto scorro fino a trovarne uno
 	if(myEap != NULL){
-		struct eap_st * anEap = myEap;
+		anEap = myEap;
 		while(anEap->next != NULL)
 			anEap = anEap->next;
 		anEap->next = (struct eap_st *)(malloc(sizeof(struct eap_st)));
+		if(anEap == NULL){
+					printf("errore malloc");
+				}
+		anEap->next->next = NULL;
 		anEap = anEap->next;
 	}
 	else{ //se e' vuoto il primo lo alloco
 		myEap = (struct eap_st *)(malloc(sizeof(struct eap_st)));
+		if(myEap == NULL){
+			printf("errore malloc");
+		}
+		myEap->next = NULL;
 		anEap = myEap;
 	}
-
+	if(anEap == NULL)
+		printf("\naneap e null\n");
 	setEapParams(nonce, count, smac, dmac, anEap);
 	return anEap;
 }
@@ -338,6 +356,8 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	printf(":");
 	fflush(stdout);
 	send(socketD, stringa, strlen(stringa), 0);
+	printf(";");
+	fflush(stdout);
 	//printf("dopo il send\n");
 
 }
