@@ -25,7 +25,6 @@
 #define EAP_SIZE 8
 #define BCAST_CONST "ffffffffffff"
 #define EAP_CONST "aaaa03000000888e"
-#define HA_CAP "/home/enrico/develop/netsec/wpa/cap/handshake_angie.cap"
 #define MY_CAP "./maistrim.cap"
 #define HOME_CAP "/home/enrico/develop/netsec/stream_home.cap"
 #define UNI_CAP "./wpa/cap/uni.cap"
@@ -89,8 +88,6 @@ int main() {
 	
 	init("WiFi", "23sorellematte");
 	
-	//strcpy(chall.ssid,"Sitecom");
-	//strcpy(chall.pwd, "angelatramontano");
 	n_pacc = 1;
 	pcap_t *descr;
 	char errbuf[PCAP_ERRBUF_SIZE];
