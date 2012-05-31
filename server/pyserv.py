@@ -26,19 +26,24 @@ def decripta(data):
 		aad = binify(data["aad"])
 		tk = binify(data["tk"])
 		nonce = binify(data["nonce"])
-		data = binify(data["data"])
-
-		print "-----------AAD----------"
+		dati = binify(data["data"])
+		mac1 = binify(data["mac1"])
+		mac2 = binify(data["mac2"])
+		print "-----------MAC1-----------"
+		print dump(mac1)
+		print "-----------MAC2-----------"
+		print dump(mac2)
+		print "-----------AAD------------"
 		print dump(aad)
 		print "-----------NONCE----------"
 		print dump(tk)
-		print "-----------TK----------"
+		print "-----------TK-------------"
 		print dump(nonce)
 		print "-----------DATI CIFRATI----------"
-		print dump(data)
+		print dump(dati)
 
 		decrypter = CCM(AES(tk,len(tk))) #di default ha gia mic e lunghezza nonce settati per il ccmp
-		plainText = decrypter.decrypt(data,nonce,aad)
+		plainText = decrypter.decrypt(dati,nonce,aad)
 		print "-----------DATI IN CHIARO----------"
 		print dump(plainText)
 
@@ -85,7 +90,7 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
 			self.data = self.rfile.readline().strip()
 			if not self.data:
 				break
-			print self.data
+			#print self.data
 			try:
 				dati = json.loads(self.data)
 				#1 = messaggio

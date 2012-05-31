@@ -267,7 +267,7 @@ void setBeacon(char * newSid, unsigned char * newMac){
 	}
 }
 
-void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD){
+void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD, unsigned char * mac1, unsigned char * mac2){
 
 	int k;
 	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
@@ -350,7 +350,29 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 		//printf("%.2x",tk[i]);
 	shift += 2*TK_SIZE;
 	stringa[shift]= '\0';
-	
+
+	///
+	strcat(stringa,"\",\"mac1\":\"");
+	shift = strlen(stringa);
+
+
+	for(i=0; i<MAC_SIZE;i++)
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(mac1[i]));
+
+	shift += 2*MAC_SIZE;
+	stringa[shift]= '\0';
+	///
+
+	strcat(stringa,"\",\"mac2\":\"");
+	shift = strlen(stringa);
+
+
+	for(i=0; i<MAC_SIZE;i++)
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(mac2[i]));
+
+	shift += 2*MAC_SIZE;
+	stringa[shift]= '\0';
+
 	strcat(stringa,"\"}\n");
 	//printf("%s\n", stringa);
 	printf(":");
@@ -413,7 +435,7 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet, int socket
 	struct sec_assoc * secAss;
 
 	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL)
-		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor);
+		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, secAss->apmac, secAss->smac);
 
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))

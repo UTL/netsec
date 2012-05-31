@@ -10,3 +10,4 @@ wpa/*
 *.pyc
 Client
 cclient
+tinyClient
