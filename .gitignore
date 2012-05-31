@@ -7,4 +7,5 @@ wpa/*
 *.orig
 .project
 .cproject
-
+*.pyc
+Client

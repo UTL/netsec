@@ -31,7 +31,8 @@
 #define UNI_CAP "./wpa/cap/uni.cap"
 #define FC_BEACON 0x80
 #define FC_DATA 0x08
-
+#define PORT 12345
+#define HOST "127.0.0.1"
 
 u_char * BROADCAST;
 u_char * EAP;
@@ -94,29 +95,33 @@ int main() {
 	pcap_t *descr;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	
-	//int sd; /* Il socket descriptor del client */
-	struct sockaddr_in server_addr; /* l'indirizzo del server */
-	char buff[MAX]; /* dati di invio e ricezione */
+	//int sd;
+	struct sockaddr_in server_addr; // indirizzo del server
+	char buff[MAX];
  
-	/* Utilizzando la struttura hostent si definisce l'indirizzo del server */
 	struct hostent *hp;
-	hp = gethostbyname("127.0.0.1");
+	hp = gethostbyname( HOST );
  
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(12345);
-	/* successivamente viene memorizzato nella struttura server_addr */
+	server_addr.sin_port = htons(PORT);
+
 	server_addr.sin_addr.s_addr = ((struct in_addr*)(hp->h_addr)) -> s_addr;
  
-	/* Viene creato il socket descriptor */
-	if((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	//creazione del socket descriptor
+	if((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 		printf("Errore nella creazione della socket\n");
- 
-	/* Viene connesso al server */
-	if(connect(sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+		return 1;
+	}
+
+	//connessione al server
+	if(connect(sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
 		printf("Errore di connessione al server\n");
+		return 1;
+	}
 
 	// open capture file for offline processing
 	//descr = pcap_open_offline("./wpa/cap/miocap3.cap", errbuf);
+	//interfaccia, massima lunghezza snapshot, 1=promiscuo, timeout, buffer per errori
 	descr = pcap_open_live("mon0",65535,1,2000,errbuf);
 	if (descr == NULL) {
 		printf("errore durante pcap_open_live() : %s \n",errbuf);
@@ -126,7 +131,7 @@ int main() {
 	else printf("open live!\n");
 	
 	//se non è uno stream wifi non mi interessa
- 	if(pcap_datalink(descr)==DLT_IEEE802_11_RADIO)
+ 	if(pcap_datalink(descr)==DLT_IEEE802_11_RADIO)//fastidioso eclipse non è un errore
 		{
 		fp = fopen("./output.txt", "w");
 		printf("{\"command\":\"1\",\"msg\":\"Radiotape rilevato, inizio sniffing\"}\n");
@@ -143,10 +148,10 @@ int main() {
 		
 		//printf("Fine cattura pacchetti\n");
 	}
- 	else
+ 	else{
 		printf("{\"command\":\"1\",\"msg\":\"Nessun radiotape rilevato\"}\n");
-
-	//TODO cout << "capture finished" << endl;
+		return 1;
+ 	}
  
 	return 0;
 }
@@ -179,8 +184,8 @@ void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct
 void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
 	//ether_type = ntohs(eptr->ether_type);
 
-	printf("{\"command\":\"1\",\"msg\":\"Pacchetto\"}\n");
-
+	printf("."); //stampo un punto per ogni pacchetto che arriva
+	fflush(stdout); //flush, altrimenti aspetta un newline...
 
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
 

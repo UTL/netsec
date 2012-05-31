@@ -51,6 +51,7 @@ struct sec_assoc{
 	unsigned char		apmac[MAC_SIZE];
 	unsigned char		smac[MAC_SIZE];
 	unsigned char * 	tk;
+	struct sec_assoc *	next;
 };
 
 //struct eap_st *myEap = NULL;
@@ -90,8 +91,24 @@ int ready(struct eap_st * anEap){
 }
 
 void setSecAss(struct eap_st * anEap){
-	if(mySecAss == NULL)
+	struct sec_assoc * aSecAss;
+
+	if(mySecAss != NULL){
+		struct sec_assoc * aSecAss = mySecAss;
+		while(aSecAss->next != NULL && !eqMacOr(anEap->apmac, aSecAss->apmac, anEap->smac, aSecAss->smac))
+			aSecAss = aSecAss->next;
+		//se è la prima sa tra i 2 dispositivi ne creiamo uno nuovo
+		if(!eqMacOr(anEap->apmac, aSecAss->apmac, anEap->smac, aSecAss->smac)){
+			aSecAss->next = (struct sec_assoc *)(malloc(sizeof(struct sec_assoc)));
+			aSecAss = aSecAss->next;
+		}
+		//altrimenti aggiorniamo quella esistente
+	}
+	else{
 		mySecAss = malloc(sizeof(struct sec_assoc));
+		aSecAss = mySecAss;
+	}
+
 	mySecAss->tk = calc_tk(target->pwd, target->ssid, anEap->apmac, anEap->smac, anEap->anonce, anEap->snonce);
 	memcpy(mySecAss->apmac, anEap->apmac, MAC_SIZE);
 	memcpy(mySecAss->smac, anEap->smac, MAC_SIZE);
@@ -99,17 +116,27 @@ void setSecAss(struct eap_st * anEap){
 
 
 struct sec_assoc * getSecAss(unsigned char * smac, unsigned char * dmac){
-	if(mySecAss!=NULL)
-		if ((eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac)))
+	struct sec_assoc * aSecAss = mySecAss;
+	if(aSecAss!=NULL){
+		while(aSecAss->next != NULL && !eqMacOr(smac, aSecAss->apmac, dmac, aSecAss->smac))
+					aSecAss = aSecAss->next;
+		if (eqMacOr(mySecAss->apmac, dmac,mySecAss->apmac, dmac))//(eqMac(mySecAss->apmac, dmac) && eqMac(mySecAss->smac, smac)) || (eqMac(mySecAss->smac, dmac) && eqMac(mySecAss->apmac, smac))
 			return mySecAss;
+	}
 	return NULL;
+}
+
+int eqMacOr(unsigned char * macA1,unsigned char* macB1, unsigned char * macA2,
+		unsigned char* macB2) {
+	return (eqMac(macA1, macB1) && eqMac(macA2, macB2))
+			|| (eqMac(macA2, macB1) && eqMac(macA1, macB2));
 }
 
 struct eap_st * macsPresent(unsigned char * smac, unsigned char * dmac){
 	struct eap_st * anEap = myEap;
 	while(anEap!=NULL){
-		if ((eqMac(myEap->apmac, dmac) && eqMac(myEap->smac, smac)) || (eqMac(myEap->smac, dmac) && eqMac(myEap->apmac, smac)))
-			return myEap;
+		if (eqMacOr(anEap->apmac, dmac, anEap->smac, smac))
+			return anEap;
 		anEap = anEap->next;
 	}
 	return NULL;
@@ -226,7 +253,7 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 
 	int k;
 	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
-
+	/*
 	printf("{\"aad\":\"");
 	for(k=0; k<AAD_SIZE;k++)
 	printf("%.2x",aad[k]);
@@ -244,7 +271,7 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	printf("%.2x",tk[k]);
 
 	printf("\"}\n");
-
+*/
 	int shift = 0;
 	
 	int i;
@@ -307,9 +334,11 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	stringa[shift]= '\0';
 	
 	strcat(stringa,"\"}\n");
-	printf("%s\n", stringa);
+	//printf("%s\n", stringa);
+	printf(":");
+	fflush(stdout);
 	send(socketD, stringa, strlen(stringa), 0);
-	printf("dopo il send\n");
+	//printf("dopo il send\n");
 
 }
 
