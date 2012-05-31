@@ -223,7 +223,28 @@ void setBeacon(char * newSid, unsigned char * newMac){
 }
 
 void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD){
-	
+
+	int k;
+	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
+
+	printf("{\"aad\":\"");
+	for(k=0; k<AAD_SIZE;k++)
+	printf("%.2x",aad[k]);
+
+	printf("\",\"command\":\"2\",\"nonce\":\"");
+	for(k=0; k<CCMP_NONCE_SIZE;k++)
+	printf("%.2x",nonce[k]);
+
+	printf("\",\"data\":\"");
+	for(k=0; k<data_length;k++)
+	printf("%.2x",data[k]);
+
+	printf("\",\"tk\":\"");
+	for(k=0; k<TK_SIZE;k++)
+	printf("%.2x",tk[k]);
+
+	printf("\"}\n");
+
 	int shift = 0;
 	
 	int i;
@@ -237,16 +258,13 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	
 	for(i=0; i<AAD_SIZE;i++){
 		sprintf(stringa +shift+ i*2, "%.2x", (unsigned int)(aad[i]));
-		printf("%.2x",aad[i]);
 		//temp= "%.2x",aad[i]);
 		//strcat(stringa, temp);
 	}
-	printf("\n");
-	
 	
 	shift += 2*AAD_SIZE;
 	stringa[shift]= '\0';
-	printf("%s\n",stringa);
+	//printf("%s\n",stringa);
 	
 	//strcpy(temp,);
 	
@@ -265,7 +283,6 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	shift += 2*CCMP_NONCE_SIZE;
 	stringa[shift]= '\0';
 	
-	printf("%d %s \n", shift,stringa);
 
 	strcat(stringa,"\",\"data\":\"");
 	shift =  strlen(stringa);
@@ -290,10 +307,9 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	stringa[shift]= '\0';
 	
 	strcat(stringa,"\"}\n");
-	
+	printf("%s\n", stringa);
 	send(socketD, stringa, strlen(stringa), 0);
-	send(socketD, stringa, strlen(stringa), 0);
-	send(socketD, stringa, strlen(stringa), 0);
+	printf("dopo il send\n");
 
 }
 
