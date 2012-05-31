@@ -11,6 +11,14 @@
 #include "prf_ptk.h"
 #include "handler.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+
+ 
+#define MAX 8192 /* in bytes, 8KB */
+
 #define EAP_TO_COUNTER 9
 #define member_size(type, member) sizeof(((type *)0)->member)
 
@@ -31,6 +39,7 @@ u_char * EAP;
 FILE *fp;
 int n_pacc;
 
+int sd;
 
 
 
@@ -77,7 +86,7 @@ int main() {
 	//memset (chall.anonce,'\0',EAP_NONCE_SIZE);
 	//memset (chall.snonce,'\0',EAP_NONCE_SIZE);
 	
-	init("WiFi", "LAMIAPW");
+	init("WiFi", "23sorellematte");
 	
 	//strcpy(chall.ssid,"Sitecom");
 	//strcpy(chall.pwd, "angelatramontano");
@@ -85,7 +94,26 @@ int main() {
 	pcap_t *descr;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	
-	
+	//int sd; /* Il socket descriptor del client */
+	struct sockaddr_in server_addr; /* l'indirizzo del server */
+	char buff[MAX]; /* dati di invio e ricezione */
+ 
+	/* Utilizzando la struttura hostent si definisce l'indirizzo del server */
+	struct hostent *hp;
+	hp = gethostbyname("127.0.0.1");
+ 
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(12345);
+	/* successivamente viene memorizzato nella struttura server_addr */
+	server_addr.sin_addr.s_addr = ((struct in_addr*)(hp->h_addr)) -> s_addr;
+ 
+	/* Viene creato il socket descriptor */
+	if((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		printf("Errore nella creazione della socket\n");
+ 
+	/* Viene connesso al server */
+	if(connect(sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+		printf("Errore di connessione al server\n");
 
 	// open capture file for offline processing
 	//descr = pcap_open_offline("./wpa/cap/miocap3.cap", errbuf);
@@ -189,7 +217,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		//printf("ssid %s\n",str_ssid);
 		}
 	else if((mac_header->fc & 0xff) == FC_DATA){
-		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet));
+		setData((struct pcap_pkthdr*)(pkthdr) , (unsigned char *)(packet), sd);
 	}
 
 

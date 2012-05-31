@@ -59,6 +59,8 @@ struct sniffed_s *target;
 struct sec_assoc *mySecAss;
 struct eap_st *myEap;
 
+char stringa[70000];
+
 int eqCounter(unsigned char * count1, unsigned char * count2){
 	return !u_char_differ(count1, count2,COUNTER_SIZE);
 }
@@ -220,31 +222,82 @@ void setBeacon(char * newSid, unsigned char * newMac){
 	}
 }
 
-void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk){
-
+void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD){
+	
+	int shift = 0;
+	
 	int i;
 	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
-
-	printf("{\"aad\":\"");
-	for(i=0; i<AAD_SIZE;i++)
+	
+	stringa[0] = '\0';
+	char temp[50] = "{\"aad\":\"";
+	strcat(stringa, temp);
+	int aLen = strlen(temp);
+	shift += aLen;
+	
+	for(i=0; i<AAD_SIZE;i++){
+		sprintf(stringa +shift+ i*2, "%.2x", (unsigned int)(aad[i]));
 		printf("%.2x",aad[i]);
+		//temp= "%.2x",aad[i]);
+		//strcat(stringa, temp);
+	}
+	printf("\n");
+	
+	
+	shift += 2*AAD_SIZE;
+	stringa[shift]= '\0';
+	printf("%s\n",stringa);
+	
+	//strcpy(temp,);
+	
+	strcat(stringa,"\",\"command\":\"2\",\"nonce\":\"");
 
-	printf("\",\"command\":\"2\",\"nonce\":\"");
-	for(i=0; i<CCMP_NONCE_SIZE;i++)
-		printf("%.2x",nonce[i]);
+	shift =  strlen(stringa);
+	
+	for(i=0; i<CCMP_NONCE_SIZE;i++){
+			sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(nonce[i]));
+			
+			//temp= "%.2x",aad[i]);
+			//strcat(stringa, temp);
+		}
+	
 
-	printf("\",\"data\":\"");
+	shift += 2*CCMP_NONCE_SIZE;
+	stringa[shift]= '\0';
+	
+	printf("%d %s \n", shift,stringa);
+
+	strcat(stringa,"\",\"data\":\"");
+	shift =  strlen(stringa);
+	
+	
 	for(i=0; i<data_length;i++)
-		printf("%.2x",data[i]);
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(data[i]));
+	
+	shift += 2*data_length;
+	stringa[shift]= '\0';	
+		//printf("%.2x",data[i]);
 
-	printf("\",\"tk\":\"");
+	strcat(stringa,"\",\"tk\":\"");
+	shift = strlen(stringa);
+
+
 	for(i=0; i<TK_SIZE;i++)
-		printf("%.2x",tk[i]);
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(tk[i]));
 
-	printf("\"}\n");
+		//printf("%.2x",tk[i]);
+	shift += 2*TK_SIZE;
+	stringa[shift]= '\0';
+	
+	strcat(stringa,"\"}\n");
+	
+	send(socketD, stringa, strlen(stringa), 0);
+	send(socketD, stringa, strlen(stringa), 0);
+	send(socketD, stringa, strlen(stringa), 0);
+
 }
 
-void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
+void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet, int socketDescriptor){
 	struct ieee80211_radiotap_header *rh =(struct ieee80211_radiotap_header *)packet;
 
 	struct mgmt_header_t *mac_header = (struct mgmt_header_t *) (packet+rh->it_len);
@@ -295,7 +348,7 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet){
 	struct sec_assoc * secAss;
 
 	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL)
-		decrypt(aad, nonce, data, data_length, secAss->tk);
+		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor);
 
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
