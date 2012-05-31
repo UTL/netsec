@@ -40,9 +40,10 @@ def decripta(data):
 		decrypter = CCM(AES(tk,len(tk))) #di default ha gia mic e lunghezza nonce settati per il ccmp
 		plainText = decrypter.decrypt(data,nonce,aad)
 		print "-----------DATI IN CHIARO----------"
+		print dump(plainText)
 
 	except:
-		print '\033[91m' "Controllo di integrita' fallito, pacchetto non decriptato" '' '\033[0m' "" ''
+		print '\033[91m' "---CONTROLLO DI INTEGRITA' FALLITO---" '' '\033[0m' "" ''
 		
 
 def binify(inp):
