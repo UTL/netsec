@@ -1,20 +1,37 @@
 Requisiti:
-Ubuntu 10.10 x86_64 o superiore
-scheda wireless che usa drivers iwlagn
+Ubuntu 12.04 x86_64 o superiore
+scheda wireless che usa drivers iwlwifi
+
 
 Pacchetti necessari:
 libssl-dev
 libpcap0.8-dev
 build-essentials
-python
+python2.7
 aircrack-ng
-gcc 4.4
+gcc4.4
 
-sudo apt-get install binutils build-essential libc6-dev gcc-4.4 libpcap0.8-dev libssl-dev
-
-
-NB col gcc 4.6 non compila
 
 Utilizzo:
-da bash lanciare l'eseguibile
-./run_python.sh
+0) assicurarsi che tutti i pacchetti necessari siano installati
+sudo apt-get install binutils build-essential libc6-dev gcc-4.4 libpcap0.8-dev libssl-dev
+
+1) da ./script/ mettere la scheda wifi in modalità ascolto lanciando
+./mon0_Up
+
+2) da ./server/ lanciare il server col comando
+python pyserv.py
+
+3) da ./client/ compilare il contenuto con 
+Make all
+
+4) da ./client/ lanciare il client con privilegi di root col comando
+sudo ./cclient
+
+(opzionale)
+5) da ./client/ fare riconnettere la scheda wifi lanciando 
+./ifupdown
+
+
+Note: 
+col gcc 4.6 non compila, c'è un problema con l'ordine dei parametri
