@@ -12,3 +12,4 @@ Client
 cclient
 tinyClient
 log.txt
+*.~*#

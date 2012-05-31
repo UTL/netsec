@@ -1,3 +1,8 @@
+Network security: confidentiality in WPA-personal
+Enrico Rizzardi 75789
+Informatica specialistica curriculum sistemi e impianti
+
+
 Requisiti:
 Ubuntu 12.04 x86_64 o superiore
 scheda wireless che usa drivers iwlwifi
@@ -34,4 +39,4 @@ sudo ./cclient
 
 
 Note: 
-col gcc 4.6 non compila, c'è un problema con l'ordine dei parametri
+Compilando con gcc 4.6 non compila, c'è un problema con l'ordine dei parametri
