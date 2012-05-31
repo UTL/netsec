@@ -8,6 +8,11 @@ from crypto.cipher.aes import AES
 #funzione di libreria presa "com'e'"
 FILTER=''.join([(len(repr(chr(x)))==3) and chr(x) or '.' for x in range(256)])
 
+try:
+   fh = open("log.txt", "w")
+   fh.write("Inizio log\n")
+except IOError:
+   print "Errore di I/O impossibile scrivere il file di log"
 
 
 def dump(src, length=8):
@@ -29,26 +34,36 @@ def decripta(data):
 		dati = binify(data["data"])
 		mac1 = binify(data["mac1"])
 		mac2 = binify(data["mac2"])
-		print "-----------MAC1-----------"
-		print dump(mac1)
-		print "-----------MAC2-----------"
-		print dump(mac2)
-		print "-----------AAD------------"
-		print dump(aad)
-		print "-----------NONCE----------"
-		print dump(tk)
-		print "-----------TK-------------"
-		print dump(nonce)
-		print "-----------DATI CIFRATI----------"
-		print dump(dati)
+		strlist = []
+		strlist.append("-----------MAC1-----------")
+		strlist.append(dump(mac1))
+		strlist.append("-----------MAC2-----------")
+		strlist.append(dump(mac2))
+		strlist.append("-----------AAD------------")
+		strlist.append(dump(aad))
+		strlist.append("-----------NONCE----------")
+		strlist.append(dump(tk))
+		strlist.append("-----------TK-------------")
+		strlist.append(dump(nonce))
+		strlist.append("-----------DATI CIFRATI----------")
+		strlist.append(dump(dati))
+		
+		longstr = "\n".join(strlist)
+		print longstr
+		fh.write(longstr)
 
-		decrypter = CCM(AES(tk,len(tk))) #di default ha gia mic e lunghezza nonce settati per il ccmp
+		decrypter = CCM(AES(tk,len(tk)))
 		plainText = decrypter.decrypt(dati,nonce,aad)
-		print "-----------DATI IN CHIARO----------"
-		print dump(plainText)
-
+		strlist = []
+		strlist.append("-----------DATI IN CHIARO----------")
+		strlist.append(dump(plainText))
+		
+		longstr = "\n".join(strlist)
+		print longstr
+		fh.write(longstr)
 	except:
 		print '\033[91m' "---CONTROLLO DI INTEGRITA' FALLITO---" '' '\033[0m' "" ''
+		fh.write("---CONTROLLO DI INTEGRITA' FALLITO---\n")
 		
 
 def binify(inp):
@@ -59,6 +74,11 @@ def binify(inp):
 def signal_handler(signal, frame):
         print 'Rilevato Ctrl+C'
 	print 'Chiusura programma in corso'
+	try:
+   		fh.write("Close stream\n")
+		fh.close()
+	except IOError:
+		print "Error: can\'t find file or read data"
         sys.exit(0)
 
 
@@ -116,6 +136,8 @@ print "Ricordarsi di verificare ssid e pw"
 print ""
 print "Server in ascolto"
 print ""
+
+
 
 HOST, PORT = "localhost", 12345
 server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
