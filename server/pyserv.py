@@ -109,12 +109,9 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
 	
 
 signal.signal(signal.SIGINT, signal_handler)
+print "Network security: confidentiality in WPA-personal"
 print ""
-print ""
-print "Progetto Network Security"
-print "Rizzardi Enrico"
-print ""
-print "Ricordarsi di verificare ssid e pw"
+print "Rizzardi Enrico 75789"
 print ""
 print "Server in ascolto"
 print ""
