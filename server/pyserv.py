@@ -32,13 +32,13 @@ def decripta(data):
 		tk = binify(data["tk"])
 		nonce = binify(data["nonce"])
 		dati = binify(data["data"])
-		mac1 = binify(data["mac1"])
-		mac2 = binify(data["mac2"])
+		src = binify(data["src"])
+		dst = binify(data["dst"])
 		strlist = []
-		strlist.append("-----------MAC1-----------")
-		strlist.append(dump(mac1))
-		strlist.append("-----------MAC2-----------")
-		strlist.append(dump(mac2))
+		strlist.append("-----SOURCE MAC ADDRESS---")
+		strlist.append(dump(src))
+		strlist.append("------DEST MAC ADDRESS----")
+		strlist.append(dump(dst))
 		strlist.append("-----------AAD------------")
 		strlist.append(dump(aad))
 		strlist.append("-----------NONCE----------")
@@ -81,24 +81,6 @@ def signal_handler(signal, frame):
 		print "Error: can\'t find file or read data"
         sys.exit(0)
 
-
-
-def gestore(out):
-	if out != "":
-		try:
-			data = json.loads(out)
-			#1 = messaggio
-			#2 = dati da decriptare
-			if data["command"] == "2":
-				decripta(data)
-			elif data["command"] == "1":
-				print "-----------MESSAGGIO----------"
-				print data["msg"]
-				print ""
-		except ValueError:
-			print "Dati non Json"
-			print out
-			#print out
 
 
 class MyTCPHandler(SocketServer.StreamRequestHandler):
