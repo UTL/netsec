@@ -164,10 +164,10 @@ u_char * getNonce(const u_char* packet){
 	return (u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)+ sizeof(struct llc) + sizeof(struct in_eapol));
 	}
 
-void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header){
+void eap_mgmt(const u_char* packet, struct ieee80211_radiotap_header *rh, struct mgmt_header_t *mac_header, int socketDescr){
 	//WARNING controllare la lunghezza dei pacchetti prima di fare getcounter e getnonce
 
-	setEap(getNonce(packet), getCounter(packet), mac_header->sa, mac_header->da);
+	setEap(getNonce(packet), getCounter(packet), mac_header->sa, mac_header->da, socketDescr);
 	/*int i;
 
 			for(i=0; i<EAP_NONCE_SIZE;i++)
@@ -199,7 +199,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		fprintf(fp, "Pacchetto broadcast\n"); //scarto i pacchetti broadcast
 	else if(!u_char_differ((u_char *) (packet +rh->it_len+ sizeof(struct mgmt_header_t)), EAP, EAP_SIZE)){
 		//WARNING controllare la lunghezza dei pacchetti prima di fare getcounter e getnonce
-		eap_mgmt(packet, rh, mac_header);
+		eap_mgmt(packet, rh, mac_header, sd);
 		}
 		
 	if((mac_header->fc & 0xff) == FC_BEACON){
@@ -214,7 +214,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 		
 		str_ssid[*ssidLength]= '\0';
 		
-		setBeacon(str_ssid, mac_header->sa);
+		setBeacon(str_ssid, mac_header->sa, sd);
 
 		//printf("ssid %s\n",str_ssid);
 		}

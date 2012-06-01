@@ -22,6 +22,10 @@
 #define THR 3
 #define DONE 4
 
+#define MSG_NEW_BEAC "{\"command\":\"1\",\"msg\":\"Catturato un beacon dell'AP target\"}\n"
+#define MSG_EAP_COMPLETE "{\"command\":\"1\",\"msg\":\"Catturato un handshake completo tra l'AP target e un host"
+#define MSG_RESET_EAP "{\"command\":\"1\",\"msg\":\"Reset dell'handshake eap\"}\n"
+#define MSG_NEW_EAP "{\"command\":\"1\",\"msg\":\"Nuovo handshake eap intercettato\"}\n"
 //parametri beacon
 struct beacon_s{
 	char				ssid[PWD_SIZE+1];
@@ -198,7 +202,7 @@ int increasedCounter(unsigned char c1[COUNTER_SIZE],unsigned char c2[COUNTER_SIZ
 }
 
 
-void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac){
+void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, unsigned char * dmac, int socketD){
 	struct eap_st * anEap= NULL;
 	if((anEap = macsPresent(smac, dmac))!= NULL){
 		if(eqCounter(anEap->counter, count)){//secondo run eapol A <-- B
@@ -219,7 +223,7 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 			}
 			else if(anEap->status == THR && eqMac(anEap->smac, dmac) && eqMac(anEap->apmac, smac)){//quarto run eapol A <-- B
 				anEap->status = DONE;
-				printf("{\"command\":\"1\",\"msg\":\"Catturato un handshake completo tra l'AP target e un host");
+				printf(MSG_EAP_COMPLETE);
 						int i;
 				printf(" mac1: ");
 					for(i=0; i<MAC_SIZE;i++)
@@ -235,20 +239,29 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 				printf("%.2x",anEap->snonce[i]);
 				
 				printf("\"}\n");
+
+				char eap_compl[strlen(MSG_EAP_COMPLETE)+ 15];
+				eap_compl[0] = '\0';
+				strcat(eap_compl, MSG_EAP_COMPLETE);
+				strcat(eap_compl, "\"}\n");
+				send(socketD, eap_compl, strlen(eap_compl), 0);
 			}
 			else{
 				resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
-				printf("{\"command\":\"1\",\"msg\":\"Reset dell'handshake eap\"}\n");
+				printf(MSG_RESET_EAP);
+				send(socketD, MSG_RESET_EAP, strlen(MSG_RESET_EAP), 0);
 			}
 		}
 		else{
 			resetHandshake(nonce, count, smac, dmac, anEap); // nuovo handshake resetto
-			printf("{\"command\":\"1\",\"msg\":\"Reset dell'handshake eap\"}\n");
+			printf(MSG_RESET_EAP);
+			send(socketD, MSG_RESET_EAP, strlen(MSG_RESET_EAP), 0);
 		}
 	}
 	else{//primo run eapol A --> B
 		anEap = createNew(nonce, count, smac, dmac);
-		printf("{\"command\":\"1\",\"msg\":\"Nuovo handshake eap intercettato\"}\n");
+		printf(MSG_NEW_EAP);
+		send(socketD, MSG_NEW_EAP, strlen(MSG_NEW_EAP), 0);
 	}
 	if(ready(anEap))
 		setSecAss(anEap);
@@ -256,18 +269,19 @@ void setEap(unsigned char * nonce, unsigned char * count, unsigned char * smac, 
 
 //gestisco solo un Access Point
 //WARNING se ci sono piu reti con lo stesso nome potrebbe non andare
-void setBeacon(char * newSid, unsigned char * newMac){
+void setBeacon(char * newSid, unsigned char * newMac, int socketDescr){
 	//se quello nuovo è come quello target e non abbiamo visto beacon prima
 	if(!strcmp(target->ssid, newSid) && !strlen(myBeac->ssid)){
 		strcpy(myBeac->ssid, newSid);
 		memcpy(myBeac->apmac, newMac, MAC_SIZE);
 		myBeac->status = DONE;
-		printf("{\"command\":\"1\",\"msg\":\"Catturato un beacon dell'AP target\"}\n");
+		printf(MSG_NEW_BEAC);
+		send(socketDescr, MSG_NEW_BEAC, strlen(MSG_NEW_BEAC), 0);
 
 	}
 }
 
-void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD, unsigned char * mac1, unsigned char * mac2){
+void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int data_length, unsigned char * tk, int socketD, unsigned char * dest, unsigned char * source){
 
 	int k;
 	//printf("{\"aad\":\"0x084274f06d40a6a3000cf635dfab00901aa057cf0000\"}\n");
@@ -352,23 +366,23 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	stringa[shift]= '\0';
 
 	///
-	strcat(stringa,"\",\"mac1\":\"");
+	strcat(stringa,"\",\"dst\":\"");
 	shift = strlen(stringa);
 
 
 	for(i=0; i<MAC_SIZE;i++)
-		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(mac1[i]));
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(dest[i]));
 
 	shift += 2*MAC_SIZE;
 	stringa[shift]= '\0';
 	///
 
-	strcat(stringa,"\",\"mac2\":\"");
+	strcat(stringa,"\",\"src\":\"");
 	shift = strlen(stringa);
 
 
 	for(i=0; i<MAC_SIZE;i++)
-		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(mac2[i]));
+		sprintf(stringa + shift +i*2, "%.2x", (unsigned int)(source[i]));
 
 	shift += 2*MAC_SIZE;
 	stringa[shift]= '\0';
@@ -434,9 +448,28 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet, int socket
 
 	struct sec_assoc * secAss;
 
-	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL)
-		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, secAss->apmac, secAss->smac);
+	int u;
+	printf("\n");
+	for(u=0; u<6;u++)
+		printf( "%.2x",mac_header->da[u]);
 
+	printf("\t");
+	for(u=0; u<6;u++)
+		printf( "%.2x",mac_header->sa[u]);
+
+
+	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL){
+		printf(" decripta ");
+		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, mac_header->da, mac_header->sa);
+
+	}
+	else if((secAss = getSecAss(mac_header->sa, mac_header->da)) != NULL){
+		printf(" decripta ");
+		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, mac_header->da, mac_header->sa);
+	}
+	else
+		printf(" scartato ");
+	printf("\n");
 	//costruire il nonce:
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
 }
