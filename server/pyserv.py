@@ -12,7 +12,7 @@ try:
    fh = open("log.txt", "w")
    fh.write("Inizio log\n")
 except IOError:
-   print "Errore di I/O impossibile scrivere il file di log"
+   print '\033[91m' "Errore di I/O impossibile scrivere il file di log ./log.txt" '' '\033[0m' "" ''
 
 
 def dump(src, length=8):
@@ -100,9 +100,9 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
 				if dati["command"] == "2":
 					decripta(dati)
 				elif dati["command"] == "1":
-					print "-----------MESSAGGIO----------"
+					print '\033[92m' "-----------MESSAGGIO----------" ''
 					print dati["msg"]
-					print ""
+					print '\033[0m' "" ''
 			except ValueError:
 				print "Dati non Json"
 				print self.data

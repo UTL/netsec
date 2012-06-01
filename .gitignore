@@ -13,3 +13,4 @@ cclient
 tinyClient
 log.txt
 *.~*#
+log_client.txt

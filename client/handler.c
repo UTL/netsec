@@ -392,8 +392,7 @@ void decrypt(unsigned char *aad,unsigned char *nonce,unsigned char *data, int da
 	printf(":");
 	fflush(stdout);
 	send(socketD, stringa, strlen(stringa), 0);
-	printf(";");
-	fflush(stdout);
+
 	//printf("dopo il send\n");
 
 }
@@ -448,28 +447,15 @@ void setData(struct pcap_pkthdr* pkthdr, const unsigned char* packet, int socket
 
 	struct sec_assoc * secAss;
 
-	int u;
-	printf("\n");
-	for(u=0; u<6;u++)
-		printf( "%.2x",mac_header->da[u]);
-
-	printf("\t");
-	for(u=0; u<6;u++)
-		printf( "%.2x",mac_header->sa[u]);
-
-
 	if((secAss = getSecAss(mac_header->da, mac_header->sa)) != NULL){
-		printf(" decripta ");
+
 		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, mac_header->da, mac_header->sa);
 
 	}
 	else if((secAss = getSecAss(mac_header->sa, mac_header->da)) != NULL){
-		printf(" decripta ");
 		decrypt(aad, nonce, data, data_length, secAss->tk, socketDescriptor, mac_header->da, mac_header->sa);
 	}
-	else
-		printf(" scartato ");
-	printf("\n");
-	//costruire il nonce:
+
+
 	// 0x00 concatenato, 2^ indirizzo mac, concatenato (filippando l'ordine dei bytes(l'inizialization vector prendendo primi 2 bytes poi ne salto 2 poi ne prendo 4))
 }
